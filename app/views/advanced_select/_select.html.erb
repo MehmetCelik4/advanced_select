@@ -1,0 +1,65 @@
+<div class="ui-advanced-select"
+     data-controller="advanced-select"
+     data-advanced-select-url-value="<%= options_url %>"
+     data-advanced-select-target-id-value="<%= target_id %>"
+     data-advanced-select-name-value="<%= name %>"
+     data-advanced-select-input-id-value="<%= id %>"
+     data-advanced-select-placeholder-value="<%= placeholder %>"
+     data-advanced-select-loading-text-value="<%= t("shared.advanced_select.loading") %>"
+     data-advanced-select-error-text-value="<%= t("shared.advanced_select.error") %>"
+     data-advanced-select-dependent-fields-value="<%= dependent_fields.to_json %>"
+     data-advanced-select-multiple-value="<%= multiple %>"
+     data-advanced-select-searchable-value="<%= searchable %>"
+     data-advanced-select-add-mode-value="<%= add_mode %>"
+     data-advanced-select-selected-value="<%= advanced_select_selected_value(selected_options) %>">
+  <div data-advanced-select-target="hiddenFields">
+    <% if multiple %>
+      <% selected_options.each do |option| %>
+        <%= hidden_field_tag name, option.fetch(:value, option.fetch(:id)) %>
+      <% end %>
+    <% else %>
+      <%= hidden_field_tag name, selected_options.first&.fetch(:value, selected_options.first&.fetch(:id)), id: id %>
+    <% end %>
+  </div>
+
+  <button type="button"
+          id="<%= "#{id}_trigger" %>"
+          class="ui-advanced-select-trigger"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-controls="<%= "#{id}_dropdown" %>"
+          data-advanced-select-target="trigger"
+          data-action="advanced-select#toggle keydown->advanced-select#keydown">
+    <span id="<%= "#{id}_summary" %>" class="ui-advanced-select-summary" data-advanced-select-target="summary">
+      <%= render partial: "advanced_select/summary", locals: { selected_options: selected_options, multiple: multiple, placeholder: placeholder } %>
+    </span>
+    <span id="<%= "#{id}_caret" %>" class="<%= ["ui-advanced-select-caret", ("hidden" if selected_options.any?)].compact.join(" ") %>" data-advanced-select-target="caret">&#8964;</span>
+    <span id="<%= "#{id}_clear" %>" class="<%= ["ui-advanced-select-clear", ("hidden" if selected_options.empty?)].compact.join(" ") %>" data-advanced-select-target="clear" data-action="click->advanced-select#clear">&times;</span>
+  </button>
+
+  <div id="<%= "#{id}_dropdown" %>"
+       class="ui-advanced-select-dropdown hidden"
+       data-advanced-select-target="dropdown">
+    <% if searchable %>
+      <%= tag.input type: "search",
+                    id: "#{id}_search",
+                    autocomplete: "off",
+                    placeholder: placeholder,
+                    class: "ui-advanced-select-search",
+                    data: {
+                      advanced_select_target: "search",
+                      action: "input->advanced-select#search keydown->advanced-select#keydown"
+                    } %>
+    <% end %>
+
+    <%= render partial: "advanced_select/options", locals: {
+      target_id: target_id,
+      selected_options: selected_options,
+      options: advanced_select_options_for_render(options, selected_options, searchable),
+      multiple: multiple,
+      add_mode: add_mode,
+      query: nil,
+      option_content_partial: option_content_partial
+    } %>
+  </div>
+</div>

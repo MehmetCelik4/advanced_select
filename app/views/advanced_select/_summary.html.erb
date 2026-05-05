@@ -1,0 +1,14 @@
+<% if selected_options.any? %>
+  <% if multiple %>
+    <% selected_options.first(2).each do |option| %>
+      <span class="ui-advanced-select-token"><%= option.fetch(:display_label) %></span>
+    <% end %>
+    <% if selected_options.size > 2 %>
+      <span class="ui-advanced-select-token"><%= "& +#{selected_options.size - 2}" %></span>
+    <% end %>
+  <% else %>
+    <span class="ui-advanced-select-value"><%= selected_options.first.fetch(:display_label) %></span>
+  <% end %>
+<% else %>
+  <span class="ui-advanced-select-placeholder"><%= placeholder %></span>
+<% end %>

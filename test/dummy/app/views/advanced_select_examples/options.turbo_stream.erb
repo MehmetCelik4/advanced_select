@@ -1,0 +1,8 @@
+<%= turbo_stream.replace @target_id do %>
+  <%= advanced_select_options_tag(
+    target_id: @target_id,
+    selected: [],
+    options: @options,
+    query: @query
+  ) %>
+<% end %>

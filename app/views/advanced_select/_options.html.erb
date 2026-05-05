@@ -1,0 +1,30 @@
+<div id="<%= target_id %>"
+     class="ui-advanced-select-options"
+     data-advanced-select-target="options"
+     aria-busy="false"
+     <% if local_assigns[:multiple] %>aria-multiselectable="true"<% end %>
+     role="listbox">
+  <% advanced_select_option_groups(options).each do |group| %>
+    <% if group[:label].present? %>
+      <div class="ui-advanced-select-group-label"><%= group.fetch(:label) %></div>
+    <% end %>
+
+    <% group.fetch(:options).each do |option| %>
+      <%= render partial: "advanced_select/option", locals: { option: option, selected_options: selected_options, option_content_partial: option_content_partial } %>
+    <% end %>
+  <% end %>
+
+  <% if advanced_select_add_option?(options, selected_options, add_mode, query) %>
+    <button type="button"
+            class="ui-advanced-select-add-option"
+            data-action="mouseenter->advanced-select#activateOption mousedown->advanced-select#add"
+            data-advanced-select-value-param="<%= "__new__:#{query}" %>"
+            data-advanced-select-submit-value-param="<%= "__new__:#{query}" %>"
+            data-advanced-select-label-param="<%= query %>"
+            data-advanced-select-display-label-param="<%= query %>">
+      <%= t("shared.advanced_select.add_option", query: query) %>
+    </button>
+  <% elsif advanced_select_options_empty?(options) %>
+    <div class="ui-advanced-select-empty"><%= t("shared.advanced_select.empty") %></div>
+  <% end %>
+</div>

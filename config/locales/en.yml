@@ -1,0 +1,7 @@
+en:
+  shared:
+    advanced_select:
+      add_option: "Add %{query}"
+      empty: "No options found"
+      error: "Options could not be loaded"
+      loading: "Loading..."

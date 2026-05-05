@@ -1,0 +1,8 @@
+<%%# locals: (option:) %>
+
+<span class="ui-advanced-select-option-content">
+  <span><%%= option.fetch(:label) %></span>
+  <%% if option[:description].present? %>
+    <span class="ui-advanced-select-option-description"><%%= option[:description] %></span>
+  <%% end %>
+</span>

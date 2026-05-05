@@ -1,0 +1,7 @@
+tr:
+  shared:
+    advanced_select:
+      add_option: "%{query} ekle"
+      empty: "Seçenek bulunamadı"
+      error: "Seçenekler yüklenemedi"
+      loading: "Yükleniyor..."

@@ -1,0 +1,20 @@
+<%= advanced_select_tag(
+  "example[item_id]",
+  id: "example_item_id",
+  selected: nil,
+  options: [
+    { id: "local-1", label: "Local One" },
+    { id: "local-2", label: "Local Two" }
+  ],
+  placeholder: "Choose local item",
+  searchable: false
+) %>
+
+<%= advanced_select_tag(
+  "example[remote_id]",
+  id: "example_remote_id",
+  selected: nil,
+  options: [],
+  placeholder: "Search remote item",
+  options_url: advanced_select_example_options_path
+) %>
