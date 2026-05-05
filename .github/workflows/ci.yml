@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Install gems
+        run: nix develop -c bundle install
+
+      - name: Run Ruby tests
+        run: nix develop -c bundle exec rails test
+
+      - name: Run importmap browser test
+        run: nix develop -c bundle exec ruby -Itest test/system/advanced_select_interaction_test.rb
+
+      - name: Run jsbundling browser test
+        run: nix develop -c bundle exec ruby -Itest test/system/jsbundling_advanced_select_interaction_test.rb
+
+      - name: Build gem
+        run: nix develop -c gem build advanced_select.gemspec
