@@ -19,7 +19,6 @@
         {
           default = pkgs.mkShell {
             packages = [
-              pkgs.bundler
               pkgs.esbuild
               pkgs.gcc
               pkgs.libyaml.dev
