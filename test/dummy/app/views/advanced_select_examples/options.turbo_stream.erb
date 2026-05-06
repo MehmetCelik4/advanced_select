@@ -3,6 +3,8 @@
     target_id: @target_id,
     selected: [],
     options: @options,
-    query: @query
+    query: @query,
+    add_mode: @target_id == "example_styled_remote_id_options",
+    classes: (@target_id == "example_styled_remote_id_options" ? styled_advanced_select_classes : {})
   ) %>
 <% end %>

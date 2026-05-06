@@ -18,3 +18,27 @@
   placeholder: "Search remote item",
   options_url: advanced_select_example_options_path
 ) %>
+
+<%= advanced_select_tag(
+  "example[styled_id]",
+  id: "example_styled_id",
+  selected: { id: "styled-1", label: "Styled One" },
+  options: [
+    { id: "styled-1", label: "Styled One" },
+    { id: "styled-2", label: "Styled Two" }
+  ],
+  placeholder: "Choose styled item",
+  searchable: false,
+  classes: styled_advanced_select_classes
+) %>
+
+<%= advanced_select_tag(
+  "example[styled_remote_id]",
+  id: "example_styled_remote_id",
+  selected: nil,
+  options: [],
+  placeholder: "Search styled remote item",
+  options_url: advanced_select_example_options_path,
+  add_mode: true,
+  classes: styled_advanced_select_classes
+) %>

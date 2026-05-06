@@ -1,7 +1,8 @@
 module AdvancedSelect
   module Helper
-    def advanced_select_tag(name, id:, selected:, options:, placeholder:, options_url: nil, multiple: false, searchable: true, add_mode: false, dependent_fields: {}, option_content_partial: nil)
+    def advanced_select_tag(name, id:, selected:, options:, placeholder:, options_url: nil, multiple: false, searchable: true, add_mode: false, dependent_fields: {}, option_content_partial: nil, classes: {})
       selected_options = advanced_select_selected_options(selected)
+      class_map = advanced_select_class_map(classes)
 
       render partial: "advanced_select/select", locals: {
         name: name,
@@ -15,11 +16,12 @@ module AdvancedSelect
         add_mode: add_mode,
         dependent_fields: dependent_fields,
         target_id: "#{id}_options",
-        option_content_partial: option_content_partial
+        option_content_partial: option_content_partial,
+        class_map: class_map
       }
     end
 
-    def advanced_select_options_tag(target_id:, selected:, options:, multiple: false, add_mode: false, query: nil, option_content_partial: nil)
+    def advanced_select_options_tag(target_id:, selected:, options:, multiple: false, add_mode: false, query: nil, option_content_partial: nil, classes: {})
       render partial: "advanced_select/options", locals: {
         target_id: target_id,
         selected_options: advanced_select_selected_options(selected),
@@ -27,8 +29,17 @@ module AdvancedSelect
         multiple: multiple,
         add_mode: add_mode,
         query: query,
-        option_content_partial: option_content_partial
+        option_content_partial: option_content_partial,
+        class_map: advanced_select_class_map(classes)
       }
+    end
+
+    def advanced_select_class(class_map, *keys)
+      class_map.class_name(*keys)
+    end
+
+    def advanced_select_state_class(class_map, key)
+      class_map.state_class(key)
     end
 
     def advanced_select_selected_options(selected)
@@ -129,6 +140,10 @@ module AdvancedSelect
 
     def advanced_select_flat_options(options)
       options.flat_map { |option| option.key?(:options) ? option.fetch(:options) : option }
+    end
+
+    def advanced_select_class_map(classes)
+      classes.is_a?(AdvancedSelect::ClassMap) ? classes : AdvancedSelect::ClassMap.new(classes)
     end
   end
 end

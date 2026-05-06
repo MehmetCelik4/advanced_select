@@ -1,4 +1,6 @@
 class AdvancedSelectExamplesController < ApplicationController
+  helper_method :styled_advanced_select_classes
+
   def show
   end
 
@@ -11,6 +13,18 @@ class AdvancedSelectExamplesController < ApplicationController
   end
 
   private
+
+  def styled_advanced_select_classes
+    {
+      trigger: "test-trigger-class",
+      dropdown: "test-dropdown-class",
+      option: "test-option-class",
+      option_active: "test-option-active-class test-option-active-extra",
+      option_selected: "test-option-selected-class",
+      add_option: "test-add-option-class",
+      add_option_active: "test-add-option-active-class"
+    }
+  end
 
   def remote_options
     [

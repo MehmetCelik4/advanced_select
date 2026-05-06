@@ -1,6 +1,6 @@
 <% selected = advanced_select_option_selected?(option, selected_options) %>
 <button type="button"
-        class="ui-advanced-select-option"
+        class="<%= advanced_select_class(class_map, :option, (:option_selected if selected)) %>"
         role="option"
         aria-selected="<%= selected %>"
         data-action="mouseenter->advanced-select#activateOption mousedown->advanced-select#choose"
@@ -8,10 +8,10 @@
         data-advanced-select-submit-value-param="<%= advanced_select_option_value(option) %>"
         data-advanced-select-label-param="<%= advanced_select_option_label(option) %>"
         data-advanced-select-display-label-param="<%= advanced_select_option_display_label(option) %>">
-  <span class="ui-advanced-select-option-check"><% if selected %>&#10003;<% end %></span>
+  <span class="<%= advanced_select_class(class_map, :option_check) %>"><% if selected %>&#10003;<% end %></span>
   <% if option_content_partial.present? %>
     <%= render partial: option_content_partial, locals: { option: option } %>
   <% else %>
-    <%= render partial: "advanced_select/default_option_content", locals: { option: option } %>
+    <%= render partial: "advanced_select/default_option_content", locals: { option: option, class_map: class_map } %>
   <% end %>
 </button>

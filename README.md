@@ -579,7 +579,8 @@ advanced_select_tag(
   searchable: true,
   add_mode: false,
   dependent_fields: {},
-  option_content_partial: nil
+  option_content_partial: nil,
+  classes: {}
 )
 ```
 
@@ -593,7 +594,8 @@ advanced_select_options_tag(
   multiple: false,
   add_mode: false,
   query: nil,
-  option_content_partial: nil
+  option_content_partial: nil,
+  classes: {}
 )
 ```
 
@@ -638,7 +640,80 @@ Override these keys in the host app as needed.
 
 ## Styling
 
-AdvancedSelect ships plain CSS defaults. Importmap/Sprockets host applications can put app-specific styling in a host-owned file such as:
+AdvancedSelect ships plain CSS defaults and keeps public `ui-advanced-select-*` classes on rendered elements for JavaScript and CSS compatibility.
+
+### Styling With Tailwind Classes
+
+Host apps can pass a `classes:` map to append app-owned classes directly to the generated markup. This avoids selector copying, `!important`, and separate CSS overrides for common Tailwind customization:
+
+```erb
+<%= advanced_select_tag(
+  "cost_allocation[customer_type]",
+  id: "cost_allocation_customer_type",
+  selected: selected_customer_type,
+  options: customer_type_options,
+  placeholder: "Customer type",
+  classes: {
+    trigger: "min-h-10 rounded-md border-gray-300",
+    option: "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-gray-700 hover:bg-red-500 hover:text-white",
+    option_active: "bg-red-500 text-white",
+    option_selected: "bg-indigo-50 text-indigo-700"
+  }
+) %>
+```
+
+The gem keeps its base classes and appends the host classes. For example, option buttons still keep `.ui-advanced-select-option`, and the classes from `classes[:option]` are added beside it.
+
+Use `option_active` for hover and keyboard active state. Stimulus adds and removes those classes as the active option changes. Use `add_option_active` when add-mode rows need a different active state. Use `option_selected` for selected state; it is rendered on initially selected options and updated by Stimulus when selection changes. `aria-selected="true"` is still preserved.
+
+Supported class map keys:
+
+```ruby
+classes: {
+  root: "...",
+  trigger: "...",
+  summary: "...",
+  placeholder: "...",
+  value: "...",
+  token: "...",
+  caret: "...",
+  clear: "...",
+  dropdown: "...",
+  search: "...",
+  options: "...",
+  option: "...",
+  option_active: "...",
+  option_selected: "...",
+  option_check: "...",
+  option_content: "...",
+  option_description: "...",
+  group_label: "...",
+  add_option: "...",
+  add_option_active: "...",
+  empty: "...",
+  loading: "...",
+  error: "..."
+}
+```
+
+For remote Turbo Stream option replacement, pass the same class map to `advanced_select_options_tag` in the endpoint template when server-rendered option rows should include the host classes:
+
+```erb
+<%= advanced_select_options_tag(
+  target_id: @target_id,
+  selected: @selected_options,
+  options: @options,
+  classes: advanced_select_classes
+) %>
+```
+
+Tailwind content scanning can usually see class strings when they are written literally in ERB. If the host app builds class names dynamically, add the relevant classes to the app's Tailwind safelist.
+
+The host app can still load the gem CSS through `application.css`; the class map is for practical per-call styling on top of the defaults.
+
+### CSS Overrides
+
+Importmap/Sprockets host applications can put app-specific styling in a host-owned file such as:
 
 ```text
 app/assets/stylesheets/advanced_select_overrides.css

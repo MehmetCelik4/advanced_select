@@ -1,4 +1,4 @@
-<div class="ui-advanced-select"
+<div class="<%= advanced_select_class(class_map, :root) %>"
      data-controller="advanced-select"
      data-advanced-select-url-value="<%= options_url %>"
      data-advanced-select-target-id-value="<%= target_id %>"
@@ -11,6 +11,14 @@
      data-advanced-select-multiple-value="<%= multiple %>"
      data-advanced-select-searchable-value="<%= searchable %>"
      data-advanced-select-add-mode-value="<%= add_mode %>"
+     data-advanced-select-placeholder-class="<%= advanced_select_class(class_map, :placeholder) %>"
+     data-advanced-select-value-class="<%= advanced_select_class(class_map, :value) %>"
+     data-advanced-select-token-class="<%= advanced_select_class(class_map, :token) %>"
+     data-advanced-select-loading-class="<%= advanced_select_class(class_map, :loading) %>"
+     data-advanced-select-error-class="<%= advanced_select_class(class_map, :error) %>"
+     data-advanced-select-option-active-class="<%= advanced_select_state_class(class_map, :option_active) %>"
+     data-advanced-select-add-option-active-class="<%= advanced_select_state_class(class_map, :add_option_active) %>"
+     data-advanced-select-option-selected-class="<%= advanced_select_state_class(class_map, :option_selected) %>"
      data-advanced-select-selected-value="<%= advanced_select_selected_value(selected_options) %>">
   <div data-advanced-select-target="hiddenFields">
     <% if multiple %>
@@ -24,28 +32,28 @@
 
   <button type="button"
           id="<%= "#{id}_trigger" %>"
-          class="ui-advanced-select-trigger"
+          class="<%= advanced_select_class(class_map, :trigger) %>"
           aria-haspopup="listbox"
           aria-expanded="false"
           aria-controls="<%= "#{id}_dropdown" %>"
           data-advanced-select-target="trigger"
           data-action="advanced-select#toggle keydown->advanced-select#keydown">
-    <span id="<%= "#{id}_summary" %>" class="ui-advanced-select-summary" data-advanced-select-target="summary">
-      <%= render partial: "advanced_select/summary", locals: { selected_options: selected_options, multiple: multiple, placeholder: placeholder } %>
+    <span id="<%= "#{id}_summary" %>" class="<%= advanced_select_class(class_map, :summary) %>" data-advanced-select-target="summary">
+      <%= render partial: "advanced_select/summary", locals: { selected_options: selected_options, multiple: multiple, placeholder: placeholder, class_map: class_map } %>
     </span>
-    <span id="<%= "#{id}_caret" %>" class="<%= ["ui-advanced-select-caret", ("hidden" if selected_options.any?)].compact.join(" ") %>" data-advanced-select-target="caret">&#8964;</span>
-    <span id="<%= "#{id}_clear" %>" class="<%= ["ui-advanced-select-clear", ("hidden" if selected_options.empty?)].compact.join(" ") %>" data-advanced-select-target="clear" data-action="click->advanced-select#clear">&times;</span>
+    <span id="<%= "#{id}_caret" %>" class="<%= [advanced_select_class(class_map, :caret), ("hidden" if selected_options.any?)].compact.join(" ") %>" data-advanced-select-target="caret">&#8964;</span>
+    <span id="<%= "#{id}_clear" %>" class="<%= [advanced_select_class(class_map, :clear), ("hidden" if selected_options.empty?)].compact.join(" ") %>" data-advanced-select-target="clear" data-action="click->advanced-select#clear">&times;</span>
   </button>
 
   <div id="<%= "#{id}_dropdown" %>"
-       class="ui-advanced-select-dropdown hidden"
+       class="<%= [advanced_select_class(class_map, :dropdown), "hidden"].join(" ") %>"
        data-advanced-select-target="dropdown">
     <% if searchable %>
       <%= tag.input type: "search",
                     id: "#{id}_search",
                     autocomplete: "off",
                     placeholder: placeholder,
-                    class: "ui-advanced-select-search",
+                    class: advanced_select_class(class_map, :search),
                     data: {
                       advanced_select_target: "search",
                       action: "input->advanced-select#search keydown->advanced-select#keydown"
@@ -59,7 +67,8 @@
       multiple: multiple,
       add_mode: add_mode,
       query: nil,
-      option_content_partial: option_content_partial
+      option_content_partial: option_content_partial,
+      class_map: class_map
     } %>
   </div>
 </div>

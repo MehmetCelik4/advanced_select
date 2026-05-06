@@ -94,6 +94,77 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_selector fragment, ".ui-advanced-select-option-description"
   end
 
+  test "appends host class map without removing public styling hooks" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_classed_item",
+        selected: { id: "item-1", label: "Item one", description: "Description" },
+        options: [{ id: "item-1", label: "Item one", description: "Description" }],
+        placeholder: "Select",
+        searchable: false,
+        classes: {
+          root: "host-root",
+          trigger: "host-trigger",
+          dropdown: "host-dropdown",
+          option: "host-option hover:bg-red-500",
+          option_selected: "host-selected",
+          option_check: "host-check",
+          option_content: "host-content",
+          option_description: "host-description"
+        }
+      )
+    )
+
+    assert_class_includes fragment.at_css(".ui-advanced-select"), "host-root"
+    assert_class_includes fragment.at_css(".ui-advanced-select-trigger"), "host-trigger"
+    assert_class_includes fragment.at_css(".ui-advanced-select-dropdown"), "host-dropdown"
+    assert_class_includes fragment.at_css(".ui-advanced-select-option"), "host-option", "hover:bg-red-500", "host-selected"
+    assert_class_includes fragment.at_css(".ui-advanced-select-option-check"), "host-check"
+    assert_class_includes fragment.at_css(".ui-advanced-select-option-content"), "host-content"
+    assert_class_includes fragment.at_css(".ui-advanced-select-option-description"), "host-description"
+  end
+
+  test "normalizes blank host classes" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_blank_classes",
+        selected: nil,
+        options: [{ id: "item-1", label: "Item one" }],
+        placeholder: "Select",
+        searchable: false,
+        classes: { trigger: "  host-trigger   ", option: nil, dropdown: "" }
+      )
+    )
+
+    assert_class_includes fragment.at_css(".ui-advanced-select-trigger"), "host-trigger"
+    assert_no_class fragment.at_css(".ui-advanced-select-option"), "nil"
+  end
+
+  test "renders option-only class map for turbo stream replacements" do
+    fragment = html_fragment(
+      advanced_select_options_tag(
+        target_id: "report_user_ids_options",
+        selected: [{ id: 7, label: "Name" }],
+        options: [{ id: 7, label: "Name", description: "Description" }],
+        add_mode: true,
+        query: "New user",
+        classes: {
+          options: "host-options",
+          option: "host-option",
+          option_selected: "host-selected",
+          add_option: "host-add",
+          empty: "host-empty"
+        }
+      )
+    )
+
+    assert_class_includes fragment.at_css(".ui-advanced-select-options"), "host-options"
+    assert_class_includes fragment.at_css(".ui-advanced-select-option"), "host-option", "host-selected"
+    assert_class_includes fragment.at_css(".ui-advanced-select-add-option"), "host-add"
+  end
+
   test "marks multiple listbox as multiselectable" do
     fragment = html_fragment(
       advanced_select_tag(
@@ -216,5 +287,17 @@ class AdvancedSelectHelperTest < ActionView::TestCase
 
   def assert_no_selector(fragment, selector)
     assert_empty fragment.css(selector), "Expected no selector #{selector.inspect}"
+  end
+
+  def assert_class_includes(node, *classes)
+    class_names = node["class"].to_s.split
+
+    classes.each do |class_name|
+      assert_includes class_names, class_name
+    end
+  end
+
+  def assert_no_class(node, class_name)
+    refute_includes node["class"].to_s.split, class_name
   end
 end

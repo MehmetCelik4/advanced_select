@@ -1,6 +1,6 @@
-<span class="ui-advanced-select-option-content">
+<span class="<%= advanced_select_class(class_map, :option_content) %>">
   <span><%= advanced_select_option_label(option) %></span>
   <% if advanced_select_option_description(option).present? %>
-    <span class="ui-advanced-select-option-description"><%= advanced_select_option_description(option) %></span>
+    <span class="<%= advanced_select_class(class_map, :option_description) %>"><%= advanced_select_option_description(option) %></span>
   <% end %>
 </span>

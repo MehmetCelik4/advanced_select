@@ -30,4 +30,32 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "input[name='example[remote_id]'][value='remote-2']", visible: false
     assert_selector "#example_remote_id_summary", text: "Remote Beta"
   end
+
+  test "applies host class map to active add and selected states" do
+    visit root_path
+
+    assert_selector "#example_styled_id_trigger.test-trigger-class"
+
+    find("#example_styled_id_trigger").click
+    assert_selector "#example_styled_id_options button.ui-advanced-select-option.test-option-class.test-option-selected-class", text: "Styled One"
+
+    find("#example_styled_id_options button", text: "Styled Two").hover
+    assert_selector "#example_styled_id_options button.test-option-active-class.test-option-active-extra", text: "Styled Two"
+    assert_no_selector "#example_styled_id_options button.test-option-active-class", text: "Styled One"
+
+    find("#example_styled_id_options button", text: "Styled Two").click
+    find("#example_styled_id_trigger").click
+
+    assert_selector "#example_styled_id_options button.test-option-selected-class", text: "Styled Two"
+    assert_no_selector "#example_styled_id_options button.test-option-selected-class", text: "Styled One"
+    find("#example_styled_id_trigger").send_keys(:escape)
+
+    find("#example_styled_remote_id_trigger").click
+    fill_in "example_styled_remote_id_search", with: "Brand New"
+
+    assert_selector "#example_styled_remote_id_options button.ui-advanced-select-add-option.test-add-option-class", text: "Add Brand New"
+
+    find("#example_styled_remote_id_options button", text: "Add Brand New").hover
+    assert_selector "#example_styled_remote_id_options button.test-option-active-class.test-add-option-active-class", text: "Add Brand New"
+  end
 end
