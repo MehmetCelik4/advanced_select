@@ -2,6 +2,30 @@
 
 AdvancedSelect is a small Rails engine for rendering an advanced select input with Rails partials, Stimulus behavior, plain CSS, and i18n defaults.
 
+## Contents
+
+- [Design Principles](#design-principles)
+- [Requirements](#requirements)
+- [Limitations](#limitations)
+- [Usage](#usage)
+- [Supported Rails Setups](#supported-rails-setups)
+- [JavaScript](#javascript)
+- [jsbundling/Propshaft Example](#jsbundlingpropshaft-example)
+- [CSS And Asset Pipeline](#css-and-asset-pipeline)
+- [Basic Local Select](#basic-local-select)
+- [Remote Search](#remote-search)
+- [Multiple Select](#multiple-select)
+- [Add Mode](#add-mode)
+- [Dependent Fields](#dependent-fields)
+- [Custom Option Content](#custom-option-content)
+- [Option Contract](#option-contract)
+- [API Reference](#api-reference)
+- [Local Development](#local-development)
+- [i18n](#i18n)
+- [Styling](#styling)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Design Principles
 
 AdvancedSelect is intentionally lightweight. It owns the reusable UI contract, not the host application's data or business rules.
@@ -87,7 +111,7 @@ app/assets/stylesheets/advanced_select.css
 
 The installer currently supports two setup modes:
 
-- `--setup=importmap`: copies the controller and stylesheet. It expects standard `stimulus-rails` eager loading to pick up `app/javascript/controllers/advanced_select_controller.js`.
+- `--setup=importmap`: copies the controller and stylesheet. It expects standard `stimulus-rails` eager loading to pick up `app/javascript/controllers/advanced_select_controller.js`. If `app/assets/stylesheets/application.css` is a Sprockets-style manifest and does not already include `require_tree .`, the installer adds `*= require advanced_select`.
 - `--setup=jsbundling`: copies the files, registers the controller in `app/javascript/controllers/index.js`, and imports the stylesheet from `app/assets/stylesheets/application.postcss.css`.
 
 Other asset layouts can still use the copied files manually. Installer support for those layouts can be added later as separate, tested setup modes.
@@ -183,7 +207,19 @@ For `--setup=jsbundling`, the installer imports it from:
 @import "advanced_select.css";
 ```
 
-For `--setup=importmap`, the installer only copies the stylesheet. Load `app/assets/stylesheets/advanced_select.css` through the host app's asset setup after base styles so overrides can be applied.
+For `--setup=importmap`, the installer copies the stylesheet and then checks `app/assets/stylesheets/application.css`:
+
+- If it already references `advanced_select`, the installer leaves it unchanged.
+- If it uses `require_tree .`, the copied stylesheet should already be included.
+- If it is a Sprockets-style manifest without `require_tree .`, the installer adds:
+
+```css
+/*
+ *= require advanced_select
+ */
+```
+
+If the installer cannot safely detect the stylesheet entrypoint, load `app/assets/stylesheets/advanced_select.css` through the host app's asset setup after base styles so overrides can be applied.
 
 If the host app uses Sprockets, plain Propshaft stylesheet links, or another CSS pipeline, wire the copied stylesheet manually for now. Those layouts are intentionally not installer modes yet.
 

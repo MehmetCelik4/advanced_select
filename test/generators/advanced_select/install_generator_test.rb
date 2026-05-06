@@ -77,6 +77,56 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     end
   end
 
+  test "adds stylesheet require to importmap application css manifest" do
+    write_destination_file "app/assets/stylesheets/application.css", <<~CSS
+      /*
+       *= require base
+       *= require_self
+       */
+
+      body {
+        color: #111827;
+      }
+    CSS
+
+    run_generator
+
+    assert_file "app/assets/stylesheets/application.css" do |content|
+      assert_includes content, " *= require advanced_select\n *= require_self"
+    end
+  end
+
+  test "does not add stylesheet require when importmap application css requires tree" do
+    write_destination_file "app/assets/stylesheets/application.css", <<~CSS
+      /*
+       *= require_tree .
+       *= require_self
+       */
+    CSS
+
+    run_generator
+
+    assert_file "app/assets/stylesheets/application.css" do |content|
+      assert_includes content, " *= require_tree ."
+      refute_includes content, " *= require advanced_select"
+    end
+  end
+
+  test "does not duplicate importmap stylesheet require" do
+    write_destination_file "app/assets/stylesheets/application.css", <<~CSS
+      /*
+       *= require advanced_select
+       *= require_self
+       */
+    CSS
+
+    run_generator
+
+    assert_file "app/assets/stylesheets/application.css" do |content|
+      assert_equal 1, content.scan("require advanced_select").size
+    end
+  end
+
   private
 
   def write_jsbundling_fixture

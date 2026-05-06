@@ -35,7 +35,7 @@ module AdvancedSelect
       def import_stylesheet
         case setup
         when "importmap"
-          say "Import app/assets/stylesheets/advanced_select.css after your base styles if your asset setup does not include it automatically."
+          import_application_stylesheet
         when "jsbundling"
           append_postcss_import
         end
@@ -72,8 +72,44 @@ module AdvancedSelect
         insert_css_import(path)
       end
 
+      def import_application_stylesheet
+        path = "app/assets/stylesheets/application.css"
+        unless File.exist?(target_path(path))
+          say "Could not find #{path}; load app/assets/stylesheets/advanced_select.css through your host app stylesheet entrypoint."
+          return
+        end
+
+        if file_contains?(path, "advanced_select")
+          say "#{path} already references advanced_select.css."
+        elsif application_css_requires_tree?(path)
+          say "#{path} uses require_tree .; copied stylesheet should be included automatically."
+        elsif sprockets_manifest?(path)
+          insert_sprockets_require(path)
+        else
+          say "Could not safely patch #{path}; load app/assets/stylesheets/advanced_select.css through your host app stylesheet entrypoint."
+        end
+      end
+
       def file_contains?(path, content)
         File.exist?(target_path(path)) && File.read(target_path(path)).include?(content)
+      end
+
+      def application_css_requires_tree?(path)
+        File.readlines(target_path(path)).any? { |line| line.match?(%r{^\s*\*=\s*require_tree\s+\.\s*$}) }
+      end
+
+      def sprockets_manifest?(path)
+        content = File.read(target_path(path))
+        content.include?("/*") && content.include?("*/") && content.include?("*=")
+      end
+
+      def insert_sprockets_require(path)
+        lines = File.readlines(target_path(path))
+        insert_at = lines.index { |line| line.match?(%r{^\s*\*=\s*require_self\s*$}) }
+        insert_at ||= lines.index { |line| line.strip == "*/" }
+
+        lines.insert(insert_at, " *= require advanced_select\n")
+        File.write(target_path(path), lines.join)
       end
 
       def insert_css_import(path)

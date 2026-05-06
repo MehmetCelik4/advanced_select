@@ -5,8 +5,8 @@ Gem::Specification.new do |spec|
   spec.version     = AdvancedSelect::VERSION
   spec.authors     = [ "Mehmet Celik" ]
   spec.email       = [ "mehmetcelik4@gmail.com" ]
-  spec.summary     = "Reusable Rails advanced select UI engine."
-  spec.description = "AdvancedSelect provides helper-rendered Rails views, Stimulus behavior, and plain CSS for an advanced select input."
+  spec.summary     = "UI-only Rails engine for searchable advanced select inputs."
+  spec.description = "AdvancedSelect provides helper-rendered Rails partials, Stimulus dropdown behavior, Turbo Stream-compatible option updates, plain CSS, and i18n defaults while leaving data loading, authorization, and endpoints to the host app."
   spec.homepage    = "https://github.com/MehmetCelik4/advanced_select"
   spec.license     = "MIT"
   spec.required_ruby_version = ">= 3.1"
