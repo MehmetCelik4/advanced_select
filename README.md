@@ -243,6 +243,23 @@ For importmap apps, the installer uses the engine stylesheet directly. It adds t
 
 When `require_tree .` is present, the installer places the engine stylesheet before it. If the host app needs app-specific styling, create a stylesheet such as `app/assets/stylesheets/advanced_select_overrides.css`; `require_tree .` will load it after the gem defaults.
 
+If the host app loads a separate Tailwind bundle and keeps component overrides in Tailwind files, keep the gem CSS in `application.css` and load Tailwind after it in the layout:
+
+```erb
+<%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+<%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+```
+
+With that order, Tailwind component files such as `app/assets/tailwind/components/forms.css` load after the gem defaults and can override them with `@apply`:
+
+```css
+.ui-advanced-select-trigger {
+  @apply flex min-h-10 w-full items-center justify-between;
+}
+```
+
+Do not also import or require `advanced_select/advanced_select` from the Tailwind bundle in that setup; load the gem CSS once through `application.css`.
+
 For `--setup=jsbundling`, the installer copies plain CSS to:
 
 ```text
@@ -627,7 +644,24 @@ AdvancedSelect ships plain CSS defaults. Importmap/Sprockets host applications c
 app/assets/stylesheets/advanced_select_overrides.css
 ```
 
-The installer does not create this file. Create it only when the host app needs overrides. With the default Sprockets manifest, `require_tree .` loads it after `advanced_select/advanced_select`, so app-specific styles can override the gem defaults. Keep it as plain CSS so gem updates stay clean. For jsbundling apps, override after the copied `app/assets/stylesheets/advanced_select.css`.
+The installer does not create this file. Create it only when the host app needs Sprockets-side overrides. With the default Sprockets manifest, `require_tree .` loads it after `advanced_select/advanced_select`, so app-specific styles can override the gem defaults. Keep it as plain CSS so gem updates stay clean.
+
+Tailwind apps can keep AdvancedSelect overrides in an existing Tailwind component file such as `app/assets/tailwind/components/forms.css`. In that case, load the host layout's `application` stylesheet before `tailwind` so the Tailwind bundle wins:
+
+```erb
+<%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+<%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+```
+
+Example Tailwind override:
+
+```css
+.ui-advanced-select-trigger {
+  @apply flex min-h-10 w-full items-center justify-between rounded-md;
+}
+```
+
+For jsbundling apps, override after the copied `app/assets/stylesheets/advanced_select.css`.
 
 Common styling hooks:
 
