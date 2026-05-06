@@ -10,6 +10,7 @@ AdvancedSelect is a small Rails engine for rendering an advanced select input wi
 - [Usage](#usage)
 - [Supported Rails Setups](#supported-rails-setups)
 - [JavaScript](#javascript)
+- [Stimulus Customization](#stimulus-customization)
 - [jsbundling/Propshaft Example](#jsbundlingpropshaft-example)
 - [CSS And Asset Pipeline](#css-and-asset-pipeline)
 - [Basic Local Select](#basic-local-select)
@@ -102,16 +103,17 @@ The Rake shortcut accepts the same setup choice through an environment variable:
 SETUP=jsbundling bin/rails advanced_select:install
 ```
 
-The installer copies:
+For the default `importmap` setup, the installer creates a local Stimulus override file and wires the engine assets:
 
 ```text
 app/javascript/controllers/advanced_select_controller.js
-app/assets/stylesheets/advanced_select.css
+config/importmap.rb
+app/assets/stylesheets/application.css
 ```
 
 The installer currently supports two setup modes:
 
-- `--setup=importmap`: copies the controller and stylesheet. It expects standard `stimulus-rails` eager loading to pick up `app/javascript/controllers/advanced_select_controller.js`. If `app/assets/stylesheets/application.css` is a Sprockets-style manifest and does not already include `require_tree .`, the installer adds `*= require advanced_select`.
+- `--setup=importmap`: creates a local controller subclass, pins the engine controller, and requires the engine stylesheet from `app/assets/stylesheets/application.css`. It expects standard `stimulus-rails` eager loading to pick up `app/javascript/controllers/advanced_select_controller.js`.
 - `--setup=jsbundling`: copies the files, registers the controller in `app/javascript/controllers/index.js`, and imports the stylesheet from `app/assets/stylesheets/application.postcss.css`.
 
 Other asset layouts can still use the copied files manually. Installer support for those layouts can be added later as separate, tested setup modes.
@@ -135,6 +137,21 @@ With the default Rails `stimulus-rails` setup, controllers under `app/javascript
 app/javascript/controllers/advanced_select_controller.js
 ```
 
+The generated importmap controller is intentionally small:
+
+```js
+import AdvancedSelectController from "advanced_select/advanced_select_controller"
+
+export default class extends AdvancedSelectController {
+}
+```
+
+The installer also pins the engine controller:
+
+```ruby
+pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"
+```
+
 Importmap apps should already have a Stimulus entrypoint similar to this:
 
 ```js
@@ -145,7 +162,7 @@ import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
 eagerLoadControllersFrom("controllers", application)
 ```
 
-If the host app does not eager load Stimulus controllers, register the copied controller manually:
+If the host app does not eager load Stimulus controllers, register the local controller manually:
 
 ```js
 import AdvancedSelectController from "./controllers/advanced_select_controller"
@@ -165,6 +182,24 @@ application.register("existing", ExistingController)
 Other bundlers can use the copied controller manually, but the installer currently only patches the `jsbundling-rails` manifest shape.
 
 The installed controller imports `Turbo` from `@hotwired/turbo-rails`, so the host app must have `@hotwired/turbo-rails` resolvable in its importmap or bundler setup.
+
+### Stimulus Customization
+
+For importmap apps, customize behavior by adding only the host-specific overrides to the generated subclass:
+
+```js
+import AdvancedSelectController from "advanced_select/advanced_select_controller"
+
+export default class extends AdvancedSelectController {
+  displayLabel(option) {
+    return super.displayLabel(option).trim()
+  }
+}
+```
+
+The host app still registers the controller as `advanced-select` through normal `stimulus-rails` eager loading. This keeps local custom behavior small while allowing future gem fixes to flow through the base controller.
+
+For `jsbundling-rails` and other bundlers, the installer copies the full controller because bundlers do not resolve Rails engine JavaScript assets automatically. In that setup the copied file is host-owned.
 
 ### jsbundling/Propshaft Example
 
@@ -194,40 +229,47 @@ yarn build:css
 
 ### CSS And Asset Pipeline
 
-The installer copies plain CSS to:
+For importmap apps, the installer uses the engine stylesheet directly. It adds this Sprockets require to `app/assets/stylesheets/application.css`:
+
+```css
+/*
+ *= require advanced_select/advanced_select
+ */
+```
+
+For `--setup=jsbundling`, the installer copies plain CSS to:
 
 ```text
 app/assets/stylesheets/advanced_select.css
 ```
 
-For `--setup=jsbundling`, the installer imports it from:
+Then it imports the copied file from:
 
 ```css
 /* app/assets/stylesheets/application.postcss.css */
 @import "advanced_select.css";
 ```
 
-For `--setup=importmap`, the installer copies the stylesheet and then checks `app/assets/stylesheets/application.css`:
+For `--setup=importmap`, the installer checks `app/assets/stylesheets/application.css`:
 
-- If it already references `advanced_select`, the installer leaves it unchanged.
-- If it uses `require_tree .`, the copied stylesheet should already be included.
-- If it is a Sprockets-style manifest without `require_tree .`, the installer adds:
+- If it already references `advanced_select/advanced_select`, the installer leaves it unchanged.
+- If it is a Sprockets-style manifest, the installer adds:
 
 ```css
 /*
- *= require advanced_select
+ *= require advanced_select/advanced_select
  */
 ```
 
-If the installer cannot safely detect the stylesheet entrypoint, load `app/assets/stylesheets/advanced_select.css` through the host app's asset setup after base styles so overrides can be applied.
+If the installer cannot safely detect the stylesheet entrypoint, require `advanced_select/advanced_select` through the host app's asset setup.
 
-If the host app uses Sprockets, plain Propshaft stylesheet links, or another CSS pipeline, wire the copied stylesheet manually for now. Those layouts are intentionally not installer modes yet.
+If the host app uses plain Propshaft stylesheet links or another CSS pipeline, wire the engine stylesheet manually for now. Those layouts are intentionally not installer modes yet.
 
 Sprockets-style manual example:
 
 ```css
 /*
- *= require advanced_select
+ *= require advanced_select/advanced_select
  */
 ```
 
@@ -522,7 +564,7 @@ advanced_select_options_tag(
 )
 ```
 
-Include `app/assets/stylesheets/advanced_select.css` after your base styles.
+For importmap/Sprockets apps, require `advanced_select/advanced_select` from your stylesheet manifest. For jsbundling apps, include the copied `app/assets/stylesheets/advanced_select.css` after your base styles.
 
 ## Local Development
 
@@ -563,7 +605,7 @@ Override these keys in the host app as needed.
 
 ## Styling
 
-AdvancedSelect ships plain CSS defaults. Host applications can override them by loading their own stylesheet after `app/assets/stylesheets/advanced_select.css`.
+AdvancedSelect ships plain CSS defaults. Host applications can override them by loading their own stylesheet after the engine stylesheet or, for jsbundling apps, after the copied `app/assets/stylesheets/advanced_select.css`.
 
 Common styling hooks:
 

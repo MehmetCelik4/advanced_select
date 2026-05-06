@@ -9,15 +9,34 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
   destination File.expand_path("../../../tmp/generators/install", __dir__)
   setup :prepare_destination
 
-  test "copies the Stimulus controller and stylesheet" do
+  test "installs importmap controller override and imports engine assets" do
+    write_destination_file "config/importmap.rb", <<~RUBY
+      pin "application"
+      pin "@hotwired/turbo-rails", to: "turbo.min.js"
+      pin "@hotwired/stimulus", to: "stimulus.min.js"
+    RUBY
+    write_destination_file "app/assets/stylesheets/application.css", <<~CSS
+      /*
+       *= require_tree .
+       *= require_self
+       */
+    CSS
+
     run_generator
 
     assert_file "app/javascript/controllers/advanced_select_controller.js" do |content|
-      assert_includes content, "export default class extends Controller"
+      assert_includes content, 'import AdvancedSelectController from "advanced_select/advanced_select_controller"'
+      assert_includes content, "export default class extends AdvancedSelectController"
     end
 
-    assert_file "app/assets/stylesheets/advanced_select.css" do |content|
-      assert_includes content, ".ui-advanced-select"
+    assert_no_file "app/assets/stylesheets/advanced_select.css"
+
+    assert_file "config/importmap.rb" do |content|
+      assert_includes content, 'pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"'
+    end
+
+    assert_file "app/assets/stylesheets/application.css" do |content|
+      assert_includes content, " *= require advanced_select/advanced_select\n *= require_self"
     end
   end
 
@@ -33,6 +52,14 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     CSS
 
     run_generator [ "--setup=jsbundling" ]
+
+    assert_file "app/javascript/controllers/advanced_select_controller.js" do |content|
+      assert_includes content, "export default class extends Controller"
+    end
+
+    assert_file "app/assets/stylesheets/advanced_select.css" do |content|
+      assert_includes content, ".ui-advanced-select"
+    end
 
     assert_file "app/javascript/controllers/index.js" do |content|
       assert_includes content, 'import AdvancedSelectController from "./advanced_select_controller"'
@@ -92,11 +119,11 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     run_generator
 
     assert_file "app/assets/stylesheets/application.css" do |content|
-      assert_includes content, " *= require advanced_select\n *= require_self"
+      assert_includes content, " *= require advanced_select/advanced_select\n *= require_self"
     end
   end
 
-  test "does not add stylesheet require when importmap application css requires tree" do
+  test "adds stylesheet require even when importmap application css requires tree" do
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
        *= require_tree .
@@ -108,14 +135,14 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
 
     assert_file "app/assets/stylesheets/application.css" do |content|
       assert_includes content, " *= require_tree ."
-      refute_includes content, " *= require advanced_select"
+      assert_includes content, " *= require advanced_select/advanced_select"
     end
   end
 
   test "does not duplicate importmap stylesheet require" do
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
-       *= require advanced_select
+       *= require advanced_select/advanced_select
        *= require_self
        */
     CSS
@@ -123,7 +150,20 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     run_generator
 
     assert_file "app/assets/stylesheets/application.css" do |content|
-      assert_equal 1, content.scan("require advanced_select").size
+      assert_equal 1, content.scan("require advanced_select/advanced_select").size
+    end
+  end
+
+  test "does not duplicate importmap controller pin" do
+    write_destination_file "config/importmap.rb", <<~RUBY
+      pin "application"
+      pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"
+    RUBY
+
+    run_generator
+
+    assert_file "config/importmap.rb" do |content|
+      assert_equal 1, content.scan('pin "advanced_select/advanced_select_controller"').size
     end
   end
 

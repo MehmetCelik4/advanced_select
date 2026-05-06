@@ -15,18 +15,24 @@ module AdvancedSelect
         raise Thor::Error, "Invalid --setup=#{setup.inspect}. Expected one of: #{VALID_SETUPS.join(', ')}."
       end
 
-      def copy_stimulus_controller
-        copy_file "advanced_select_controller.js", "app/javascript/controllers/advanced_select_controller.js"
+      def install_stimulus_controller
+        case setup
+        when "importmap"
+          copy_file "advanced_select_controller_importmap.js", "app/javascript/controllers/advanced_select_controller.js"
+          pin_importmap_controller
+        when "jsbundling"
+          copy_file "advanced_select_controller.js", "app/javascript/controllers/advanced_select_controller.js"
+        end
       end
 
-      def copy_stylesheet
-        copy_file "advanced_select.css", "app/assets/stylesheets/advanced_select.css"
+      def install_stylesheet
+        copy_file "advanced_select.css", "app/assets/stylesheets/advanced_select.css" if setup == "jsbundling"
       end
 
       def register_stimulus_controller
         case setup
         when "importmap"
-          say "Importmap setup selected; stimulus-rails eager loading should load advanced_select_controller.js."
+          say "Importmap setup selected; stimulus-rails eager loading should load the local advanced_select_controller.js override."
         when "jsbundling"
           register_manifest_controller
         end
@@ -48,6 +54,19 @@ module AdvancedSelect
       end
 
       private
+
+      def pin_importmap_controller
+        path = "config/importmap.rb"
+        unless File.exist?(target_path(path))
+          say "Could not find #{path}; pin advanced_select/advanced_select_controller manually."
+          return
+        end
+        return if file_contains?(path, 'pin "advanced_select/advanced_select_controller"')
+
+        append_to_file path, <<~RUBY
+          pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"
+        RUBY
+      end
 
       def register_manifest_controller
         unless File.exist?(target_path("app/javascript/controllers/index.js"))
@@ -75,27 +94,21 @@ module AdvancedSelect
       def import_application_stylesheet
         path = "app/assets/stylesheets/application.css"
         unless File.exist?(target_path(path))
-          say "Could not find #{path}; load app/assets/stylesheets/advanced_select.css through your host app stylesheet entrypoint."
+          say "Could not find #{path}; require advanced_select/advanced_select through your host app stylesheet entrypoint."
           return
         end
 
-        if file_contains?(path, "advanced_select")
-          say "#{path} already references advanced_select.css."
-        elsif application_css_requires_tree?(path)
-          say "#{path} uses require_tree .; copied stylesheet should be included automatically."
+        if file_contains?(path, "advanced_select/advanced_select")
+          say "#{path} already references advanced_select/advanced_select.css."
         elsif sprockets_manifest?(path)
           insert_sprockets_require(path)
         else
-          say "Could not safely patch #{path}; load app/assets/stylesheets/advanced_select.css through your host app stylesheet entrypoint."
+          say "Could not safely patch #{path}; require advanced_select/advanced_select through your host app stylesheet entrypoint."
         end
       end
 
       def file_contains?(path, content)
         File.exist?(target_path(path)) && File.read(target_path(path)).include?(content)
-      end
-
-      def application_css_requires_tree?(path)
-        File.readlines(target_path(path)).any? { |line| line.match?(%r{^\s*\*=\s*require_tree\s+\.\s*$}) }
       end
 
       def sprockets_manifest?(path)
@@ -108,7 +121,7 @@ module AdvancedSelect
         insert_at = lines.index { |line| line.match?(%r{^\s*\*=\s*require_self\s*$}) }
         insert_at ||= lines.index { |line| line.strip == "*/" }
 
-        lines.insert(insert_at, " *= require advanced_select\n")
+        lines.insert(insert_at, " *= require advanced_select/advanced_select\n")
         File.write(target_path(path), lines.join)
       end
 
