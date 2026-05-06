@@ -17,6 +17,7 @@
   <% if advanced_select_add_option?(options, selected_options, add_mode, query) %>
     <button type="button"
             class="<%= advanced_select_class(class_map, :add_option) %>"
+            data-advanced-select-add-option
             data-action="mouseenter->advanced-select#activateOption mousedown->advanced-select#add"
             data-advanced-select-value-param="<%= "__new__:#{query}" %>"
             data-advanced-select-submit-value-param="<%= "__new__:#{query}" %>"

@@ -63,6 +63,9 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
 
     assert_file "app/javascript/controllers/advanced_select_controller.js" do |content|
       assert_includes content, "export default class extends Controller"
+      assert_includes content, "[data-advanced-select-option], [data-advanced-select-add-option]"
+      assert_includes content, "data-advanced-select-add-option"
+      refute_includes content, ".ui-advanced-select-add-option"
     end
 
     assert_file "app/assets/stylesheets/advanced_select.css" do |content|

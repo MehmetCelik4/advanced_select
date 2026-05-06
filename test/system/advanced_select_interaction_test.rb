@@ -36,15 +36,17 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
     assert_selector "#example_styled_id_trigger.test-trigger-class"
 
-    find("#example_styled_id_trigger").click
-    assert_selector "#example_styled_id_options button.ui-advanced-select-option.test-option-class.test-option-selected-class", text: "Styled One"
+    find("#example_styled_id_summary").click
+    assert_selector "#example_styled_id_options button.test-option-class.test-option-selected-class[data-advanced-select-option]", text: "Styled One"
+    assert_no_selector "#example_styled_id_options button.ui-advanced-select-option", text: "Styled One"
 
     find("#example_styled_id_options button", text: "Styled Two").hover
     assert_selector "#example_styled_id_options button.test-option-active-class.test-option-active-extra", text: "Styled Two"
+    assert_no_selector "#example_styled_id_options button.ui-advanced-select-option-active", text: "Styled Two"
     assert_no_selector "#example_styled_id_options button.test-option-active-class", text: "Styled One"
 
     find("#example_styled_id_options button", text: "Styled Two").click
-    find("#example_styled_id_trigger").click
+    find("#example_styled_id_summary").click
 
     assert_selector "#example_styled_id_options button.test-option-selected-class", text: "Styled Two"
     assert_no_selector "#example_styled_id_options button.test-option-selected-class", text: "Styled One"
@@ -53,9 +55,11 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     find("#example_styled_remote_id_trigger").click
     fill_in "example_styled_remote_id_search", with: "Brand New"
 
-    assert_selector "#example_styled_remote_id_options button.ui-advanced-select-add-option.test-add-option-class", text: "Add Brand New"
+    assert_selector "#example_styled_remote_id_options button.test-add-option-class[data-advanced-select-add-option]", text: "Add Brand New"
+    assert_no_selector "#example_styled_remote_id_options button.ui-advanced-select-add-option", text: "Add Brand New"
 
     find("#example_styled_remote_id_options button", text: "Add Brand New").hover
     assert_selector "#example_styled_remote_id_options button.test-option-active-class.test-add-option-active-class", text: "Add Brand New"
+    assert_no_selector "#example_styled_remote_id_options button.ui-advanced-select-option-active", text: "Add Brand New"
   end
 end

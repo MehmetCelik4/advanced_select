@@ -31,7 +31,7 @@ module AdvancedSelect
     end
 
     def class_name(*keys)
-      keys.compact.flat_map { |key| [DEFAULTS[key.to_sym], @classes[key.to_sym]] }.compact.reject(&:empty?).join(" ")
+      keys.compact.map { |key| class_for(key.to_sym) }.compact.reject(&:empty?).join(" ")
     end
 
     def state_class(key)
@@ -45,6 +45,10 @@ module AdvancedSelect
         class_name = value.to_s.squish
         normalized[key.to_sym] = class_name if class_name.present?
       end
+    end
+
+    def class_for(key)
+      @classes.fetch(key) { DEFAULTS[key] }
     end
   end
 end

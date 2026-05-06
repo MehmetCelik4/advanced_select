@@ -640,11 +640,11 @@ Override these keys in the host app as needed.
 
 ## Styling
 
-AdvancedSelect ships plain CSS defaults and keeps public `ui-advanced-select-*` classes on rendered elements for JavaScript and CSS compatibility.
+AdvancedSelect ships plain CSS defaults. When no `classes:` map is provided, rendered elements use the public `ui-advanced-select-*` styling classes.
 
 ### Styling With Tailwind Classes
 
-Host apps can pass a `classes:` map to append app-owned classes directly to the generated markup. This avoids selector copying, `!important`, and separate CSS overrides for common Tailwind customization:
+Host apps can pass a `classes:` map to replace the default styling class for each mapped element. This avoids selector copying, `!important`, and separate CSS overrides for common Tailwind customization:
 
 ```erb
 <%= advanced_select_tag(
@@ -662,7 +662,7 @@ Host apps can pass a `classes:` map to append app-owned classes directly to the 
 ) %>
 ```
 
-The gem keeps its base classes and appends the host classes. For example, option buttons still keep `.ui-advanced-select-option`, and the classes from `classes[:option]` are added beside it.
+Class map values replace defaults per key; they are not appended to the default styling class. For example, if `classes[:option]` is present, option buttons use only that class string and do not also include `.ui-advanced-select-option`. Keys that are not present still use their default classes.
 
 Use `option_active` for hover and keyboard active state. Stimulus adds and removes those classes as the active option changes. Use `add_option_active` when add-mode rows need a different active state. Use `option_selected` for selected state; it is rendered on initially selected options and updated by Stimulus when selection changes. `aria-selected="true"` is still preserved.
 
@@ -709,7 +709,7 @@ For remote Turbo Stream option replacement, pass the same class map to `advanced
 
 Tailwind content scanning can usually see class strings when they are written literally in ERB. If the host app builds class names dynamically, add the relevant classes to the app's Tailwind safelist.
 
-The host app can still load the gem CSS through `application.css`; the class map is for practical per-call styling on top of the defaults.
+The host app can still load the gem CSS through `application.css`. Class map entries replace the mapped default classes for that helper call; unmapped keys keep the gem defaults.
 
 ### CSS Overrides
 
