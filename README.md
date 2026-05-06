@@ -236,8 +236,12 @@ For importmap apps, the installer uses the engine stylesheet directly. It adds t
 ```css
 /*
  *= require advanced_select/advanced_select
+ *= require_tree .
+ *= require_self
  */
 ```
+
+When `require_tree .` is present, the installer places the engine stylesheet before it so host app stylesheets under `app/assets/stylesheets` can override the defaults.
 
 For `--setup=jsbundling`, the installer copies plain CSS to:
 
@@ -255,7 +259,7 @@ Then it imports the copied file from:
 For `--setup=importmap`, the installer checks `app/assets/stylesheets/application.css`:
 
 - If it already references `advanced_select/advanced_select`, the installer leaves it unchanged.
-- If it is a Sprockets-style manifest, the installer adds:
+- If it is a Sprockets-style manifest, the installer adds the engine stylesheet before `require_tree .` when that directive is present, otherwise before `require_self`.
 
 ```css
 /*
@@ -272,6 +276,8 @@ Sprockets-style manual example:
 ```css
 /*
  *= require advanced_select/advanced_select
+ *= require_tree .
+ *= require_self
  */
 ```
 

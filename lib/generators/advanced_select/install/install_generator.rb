@@ -131,7 +131,8 @@ module AdvancedSelect
 
       def insert_sprockets_require(path)
         lines = File.readlines(target_path(path))
-        insert_at = lines.index { |line| line.match?(%r{^\s*\*=\s*require_self\s*$}) }
+        insert_at = lines.index { |line| line.match?(%r{^\s*\*=\s*require_tree\s+\.\s*$}) }
+        insert_at ||= lines.index { |line| line.match?(%r{^\s*\*=\s*require_self\s*$}) }
         insert_at ||= lines.index { |line| line.strip == "*/" }
 
         lines.insert(insert_at, " *= require advanced_select/advanced_select\n")

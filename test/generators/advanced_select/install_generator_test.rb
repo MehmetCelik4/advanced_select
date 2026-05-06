@@ -43,7 +43,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     end
 
     assert_file "app/assets/stylesheets/application.css" do |content|
-      assert_includes content, " *= require advanced_select/advanced_select\n *= require_self"
+      assert_includes content, " *= require advanced_select/advanced_select\n *= require_tree ."
     end
   end
 
@@ -131,7 +131,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     end
   end
 
-  test "adds stylesheet require even when importmap application css requires tree" do
+  test "adds stylesheet require before importmap application css require tree" do
     write_importmap_controller_index
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
@@ -143,8 +143,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     run_generator
 
     assert_file "app/assets/stylesheets/application.css" do |content|
-      assert_includes content, " *= require_tree ."
-      assert_includes content, " *= require advanced_select/advanced_select"
+      assert_includes content, " *= require advanced_select/advanced_select\n *= require_tree ."
     end
   end
 
