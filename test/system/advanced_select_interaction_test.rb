@@ -31,6 +31,29 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "#example_remote_id_summary", text: "Remote Beta"
   end
 
+  test "keeps remote multiple selected ticks after turbo stream replacements" do
+    visit root_path
+
+    find("#example_remote_multiple_ids_trigger").click
+
+    assert_selected_option_check "example_remote_multiple_ids", "Remote Alpha"
+    assert_selected_option_check "example_remote_multiple_ids", "Remote Beta"
+    assert_selected_option_check "example_remote_multiple_ids", "Remote Gamma"
+
+    find("#example_remote_multiple_ids_options button", text: "Remote Delta").click
+
+    assert_selector "input[name='example[remote_multiple_ids][]'][value='remote-1']", visible: false
+    assert_selector "input[name='example[remote_multiple_ids][]'][value='remote-2']", visible: false
+    assert_selector "input[name='example[remote_multiple_ids][]'][value='remote-3']", visible: false
+    assert_selector "input[name='example[remote_multiple_ids][]'][value='remote-4']", visible: false
+    assert_selector "#example_remote_multiple_ids_summary", text: "& +2"
+
+    assert_selected_option_check "example_remote_multiple_ids", "Remote Alpha"
+    assert_selected_option_check "example_remote_multiple_ids", "Remote Beta"
+    assert_selected_option_check "example_remote_multiple_ids", "Remote Gamma"
+    assert_selected_option_check "example_remote_multiple_ids", "Remote Delta"
+  end
+
   test "selects and deselects multiple local options" do
     visit root_path
 
@@ -129,5 +152,13 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     find("#example_styled_remote_id_options button", text: "Add Brand New").click
     assert_selector "input[name='example[styled_remote_id]'][value='__new__:Brand New']", visible: false
     assert_selector "#example_styled_remote_id_summary", text: "Brand New"
+  end
+
+  private
+
+  def assert_selected_option_check(select_id, text)
+    option = find("##{select_id}_options button[aria-selected='true']", text: text)
+
+    assert_equal "\u2713", option.find("[data-advanced-select-option-check]").text
   end
 end

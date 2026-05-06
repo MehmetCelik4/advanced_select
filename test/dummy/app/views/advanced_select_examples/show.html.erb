@@ -20,6 +20,21 @@
 ) %>
 
 <%= advanced_select_tag(
+  "example[remote_multiple_ids][]",
+  id: "example_remote_multiple_ids",
+  selected: [
+    { id: "remote-1", label: "Remote Alpha" },
+    { id: "remote-2", label: "Remote Beta" },
+    { id: "remote-3", label: "Remote Gamma" }
+  ],
+  options: [],
+  placeholder: "Search remote multiple items",
+  options_url: advanced_select_example_options_path,
+  multiple: true,
+  add_mode: true
+) %>
+
+<%= advanced_select_tag(
   "example[multiple_ids][]",
   id: "example_multiple_ids",
   selected: [],

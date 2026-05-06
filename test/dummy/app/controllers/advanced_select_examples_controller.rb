@@ -37,7 +37,9 @@ class AdvancedSelectExamplesController < ApplicationController
   def remote_options
     [
       { id: "remote-1", label: "Remote Alpha" },
-      { id: "remote-2", label: "Remote Beta" }
+      { id: "remote-2", label: "Remote Beta" },
+      { id: "remote-3", label: "Remote Gamma" },
+      { id: "remote-4", label: "Remote Delta" }
     ]
   end
 

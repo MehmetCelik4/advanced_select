@@ -84,7 +84,7 @@ Run the installer:
 bin/rails generate advanced_select:install
 ```
 
-The default setup is `importmap`. For ivdIQ-style apps that use `jsbundling-rails`, pass the setup explicitly:
+The default setup is `importmap`. Apps that use `jsbundling-rails` should pass the setup explicitly:
 
 ```bash
 bin/rails generate advanced_select:install --setup=importmap
@@ -205,7 +205,7 @@ For `jsbundling-rails` and other bundlers, the installer copies the full control
 
 ### jsbundling/Propshaft Example
 
-Apps like ivdIQ use Rails with `jsbundling-rails`, esbuild, Propshaft, and a PostCSS entrypoint. In that setup the installer is expected to leave these changes:
+Apps that use Rails with `jsbundling-rails`, esbuild, Propshaft, and a PostCSS entrypoint can install with the jsbundling setup. In that setup the installer is expected to leave these changes:
 
 ```bash
 bin/rails generate advanced_select:install --setup=jsbundling
@@ -430,6 +430,37 @@ New values submit with the `__new__:` prefix:
 ```text
 __new__:New tag
 ```
+
+For remote add mode, the host endpoint owns the add-new business rule. AdvancedSelect sends the current `query`, `selected_ids[]`, and `add_mode`; the endpoint should use that state, plus its own records, to decide whether to render an add-new row. If a typed value is already selected or already exists in the host data source, the Turbo Stream response should not render another add-new option for the same value.
+
+When a newly typed value should remain visible in the dropdown so users can deselect it later, render that selected value from the host endpoint as part of the returned option list. The gem does not persist or invent remote options; it only submits the `__new__:` value and renders the options returned by the host app.
+
+For example, a remote endpoint can turn selected `__new__:` values back into options before rendering the Turbo Stream:
+
+```ruby
+new_selected_options = Array(params[:selected_ids]).filter_map do |id|
+  next unless id.start_with?("__new__:")
+
+  label = id.delete_prefix("__new__:")
+  { id: id, value: id, label: label }
+end
+
+options = new_selected_options + load_options_for_query(params[:query])
+selected_options = new_selected_options
+
+render turbo_stream: turbo_stream.replace(params[:target]) {
+  helpers.advanced_select_options_tag(
+    target_id: params[:target],
+    selected: selected_options,
+    options: options,
+    multiple: true,
+    add_mode: params[:add_mode] == "1",
+    query: params[:query]
+  )
+}
+```
+
+If the endpoint also needs to mark existing records as selected, resolve those ids from `params[:selected_ids]` and include them in `selected_options` too.
 
 ### Dependent Fields
 
