@@ -4,9 +4,10 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
   test "loads default stylesheet through the asset pipeline" do
     visit root_path
 
-    assert_selector "link[rel='stylesheet'][href*='advanced_select/advanced_select']",
-                    visible: false
+    assert_selector "link[rel='stylesheet'][href*='advanced_select/advanced_select']", visible: false
+    assert_selector "link[rel='stylesheet'][href*='advanced_select_overrides']", visible: false
     assert_equal "flex", page.evaluate_script("getComputedStyle(document.querySelector('#example_item_id_trigger')).display")
+    assert_equal "3px", page.evaluate_script("getComputedStyle(document.querySelector('#example_item_id_trigger')).borderTopWidth")
     assert_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('#example_item_id_dropdown')).display")
   end
 

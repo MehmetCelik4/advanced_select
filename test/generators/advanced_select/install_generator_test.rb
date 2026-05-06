@@ -32,6 +32,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
 
     assert_no_file "app/javascript/controllers/advanced_select_controller.js"
     assert_no_file "app/assets/stylesheets/advanced_select.css"
+    assert_no_file "app/assets/stylesheets/advanced_select_overrides.css"
 
     assert_file "config/importmap.rb" do |content|
       assert_includes content, 'pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"'
@@ -43,7 +44,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     end
 
     assert_file "app/assets/stylesheets/application.css" do |content|
-      assert_includes content, " *= require advanced_select/advanced_select\n *= require_tree ."
+      assert_sprockets_require_order content
     end
   end
 
@@ -143,7 +144,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     run_generator
 
     assert_file "app/assets/stylesheets/application.css" do |content|
-      assert_includes content, " *= require advanced_select/advanced_select\n *= require_tree ."
+      assert_sprockets_require_order content
     end
   end
 
@@ -151,6 +152,8 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     write_importmap_controller_index
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
+       *= require advanced_select/advanced_select
+       *= require_tree .
        *= require advanced_select/advanced_select
        *= require_self
        */
@@ -160,6 +163,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
 
     assert_file "app/assets/stylesheets/application.css" do |content|
       assert_equal 1, content.scan("require advanced_select/advanced_select").size
+      assert_sprockets_require_order content
     end
   end
 
@@ -200,6 +204,14 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
 
       eagerLoadControllersFrom("controllers", application)
     JS
+  end
+
+  def assert_sprockets_require_order(content)
+    expected = " *= require advanced_select/advanced_select\n" \
+               " *= require_tree .\n" \
+               " *= require_self\n"
+
+    assert_includes content, expected
   end
 
   def write_jsbundling_fixture

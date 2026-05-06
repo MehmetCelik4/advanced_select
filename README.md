@@ -241,7 +241,7 @@ For importmap apps, the installer uses the engine stylesheet directly. It adds t
  */
 ```
 
-When `require_tree .` is present, the installer places the engine stylesheet before it so host app stylesheets under `app/assets/stylesheets` can override the defaults.
+When `require_tree .` is present, the installer places the engine stylesheet before it. If the host app needs app-specific styling, create a stylesheet such as `app/assets/stylesheets/advanced_select_overrides.css`; `require_tree .` will load it after the gem defaults.
 
 For `--setup=jsbundling`, the installer copies plain CSS to:
 
@@ -258,14 +258,22 @@ Then it imports the copied file from:
 
 For `--setup=importmap`, the installer checks `app/assets/stylesheets/application.css`:
 
-- If it already references `advanced_select/advanced_select`, the installer leaves it unchanged.
-- If it is a Sprockets-style manifest, the installer adds the engine stylesheet before `require_tree .` when that directive is present, otherwise before `require_self`.
+- If it is a Sprockets-style manifest, the installer normalizes the AdvancedSelect require before `require_tree .` when that directive is present, otherwise before `require_self`.
+- If `advanced_select/advanced_select` already exists, the installer does not add duplicates.
 
 ```css
 /*
  *= require advanced_select/advanced_select
  */
 ```
+
+The installer does not create a host override stylesheet. Create one only when the app needs it:
+
+```text
+app/assets/stylesheets/advanced_select_overrides.css
+```
+
+Use plain CSS in that file. Do not use Tailwind `@apply` there unless your host app explicitly processes Sprockets stylesheets through Tailwind.
 
 If the installer cannot safely detect the stylesheet entrypoint, require `advanced_select/advanced_select` through the host app's asset setup.
 
@@ -572,7 +580,7 @@ advanced_select_options_tag(
 )
 ```
 
-For importmap/Sprockets apps, require `advanced_select/advanced_select` from your stylesheet manifest. For jsbundling apps, include the copied `app/assets/stylesheets/advanced_select.css` after your base styles.
+For importmap/Sprockets apps, require `advanced_select/advanced_select` from your stylesheet manifest before host app styles. For jsbundling apps, include the copied `app/assets/stylesheets/advanced_select.css` after your base styles.
 
 ## Local Development
 
@@ -613,7 +621,13 @@ Override these keys in the host app as needed.
 
 ## Styling
 
-AdvancedSelect ships plain CSS defaults. Host applications can override them by loading their own stylesheet after the engine stylesheet or, for jsbundling apps, after the copied `app/assets/stylesheets/advanced_select.css`.
+AdvancedSelect ships plain CSS defaults. Importmap/Sprockets host applications can put app-specific styling in a host-owned file such as:
+
+```text
+app/assets/stylesheets/advanced_select_overrides.css
+```
+
+The installer does not create this file. Create it only when the host app needs overrides. With the default Sprockets manifest, `require_tree .` loads it after `advanced_select/advanced_select`, so app-specific styles can override the gem defaults. Keep it as plain CSS so gem updates stay clean. For jsbundling apps, override after the copied `app/assets/stylesheets/advanced_select.css`.
 
 Common styling hooks:
 

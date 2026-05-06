@@ -25,7 +25,9 @@ module AdvancedSelect
       end
 
       def install_stylesheet
-        copy_file "advanced_select.css", "app/assets/stylesheets/advanced_select.css" if setup == "jsbundling"
+        if setup == "jsbundling"
+          copy_file "advanced_select.css", "app/assets/stylesheets/advanced_select.css"
+        end
       end
 
       def register_stimulus_controller
@@ -111,11 +113,7 @@ module AdvancedSelect
           return
         end
 
-        if file_contains?(path, "advanced_select/advanced_select")
-          say "#{path} already references advanced_select/advanced_select.css."
-        elsif sprockets_manifest?(path)
-          insert_sprockets_require(path)
-        else
+        unless sprockets_manifest?(path) && normalize_sprockets_requires(path)
           say "Could not safely patch #{path}; require advanced_select/advanced_select through your host app stylesheet entrypoint."
         end
       end
@@ -129,14 +127,18 @@ module AdvancedSelect
         content.include?("/*") && content.include?("*/") && content.include?("*=")
       end
 
-      def insert_sprockets_require(path)
+      def normalize_sprockets_requires(path)
         lines = File.readlines(target_path(path))
+        lines.reject! { |line| line.match?(%r{^\s*\*=\s*require\s+advanced_select/advanced_select\s*$}) }
+
         insert_at = lines.index { |line| line.match?(%r{^\s*\*=\s*require_tree\s+\.\s*$}) }
         insert_at ||= lines.index { |line| line.match?(%r{^\s*\*=\s*require_self\s*$}) }
         insert_at ||= lines.index { |line| line.strip == "*/" }
+        return false unless insert_at
 
         lines.insert(insert_at, " *= require advanced_select/advanced_select\n")
         File.write(target_path(path), lines.join)
+        true
       end
 
       def insert_css_import(path)

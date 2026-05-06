@@ -1,0 +1,8 @@
+/*
+ * Host app overrides for advanced_select.
+ * Keep app-specific styling here so gem updates remain clean.
+ */
+
+.ui-advanced-select-trigger {
+  border-top-width: 3px;
+}
