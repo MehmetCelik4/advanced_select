@@ -103,17 +103,17 @@ The Rake shortcut accepts the same setup choice through an environment variable:
 SETUP=jsbundling bin/rails advanced_select:install
 ```
 
-For the default `importmap` setup, the installer creates a local Stimulus override file and wires the engine assets:
+For the default `importmap` setup, the installer registers the engine Stimulus controller and wires the engine assets:
 
 ```text
-app/javascript/controllers/advanced_select_controller.js
 config/importmap.rb
+app/javascript/controllers/index.js
 app/assets/stylesheets/application.css
 ```
 
 The installer currently supports two setup modes:
 
-- `--setup=importmap`: creates a local controller subclass, pins the engine controller, and requires the engine stylesheet from `app/assets/stylesheets/application.css`. It expects standard `stimulus-rails` eager loading to pick up `app/javascript/controllers/advanced_select_controller.js`.
+- `--setup=importmap`: pins the engine controller, registers it in `app/javascript/controllers/index.js`, and requires the engine stylesheet from `app/assets/stylesheets/application.css`.
 - `--setup=jsbundling`: copies the files, registers the controller in `app/javascript/controllers/index.js`, and imports the stylesheet from `app/assets/stylesheets/application.postcss.css`.
 
 Other asset layouts can still use the copied files manually. Installer support for those layouts can be added later as separate, tested setup modes.
@@ -131,19 +131,11 @@ Supported:
 
 The host app must load Turbo and start Stimulus. AdvancedSelect depends on `turbo-rails` and `stimulus-rails`, but the app still owns its JavaScript entrypoint.
 
-With the default Rails `stimulus-rails` setup, controllers under `app/javascript/controllers` are eager loaded, so the installed controller should be picked up automatically:
-
-```text
-app/javascript/controllers/advanced_select_controller.js
-```
-
-The generated importmap controller is intentionally small:
+The installer adds an explicit registration to `app/javascript/controllers/index.js`:
 
 ```js
 import AdvancedSelectController from "advanced_select/advanced_select_controller"
-
-export default class extends AdvancedSelectController {
-}
+application.register("advanced-select", AdvancedSelectController)
 ```
 
 The installer also pins the engine controller:
@@ -154,7 +146,7 @@ pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_
 
 The engine exposes `advanced_select/advanced_select_controller.js` to the asset pipeline, so host apps should not need to add `AdvancedSelect::Engine.root.join("app/javascript")` to `config.assets.paths` or link the controller from `app/assets/config/manifest.js`.
 
-Importmap apps should already have a Stimulus entrypoint similar to this:
+Importmap apps should already have a Stimulus entrypoint with an exported `application`, similar to this:
 
 ```js
 // app/javascript/controllers/index.js
@@ -164,10 +156,10 @@ import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
 eagerLoadControllersFrom("controllers", application)
 ```
 
-If the host app does not eager load Stimulus controllers, register the local controller manually:
+If the host app does not use the standard `stimulus-rails` entrypoint, register the engine controller manually:
 
 ```js
-import AdvancedSelectController from "./controllers/advanced_select_controller"
+import AdvancedSelectController from "advanced_select/advanced_select_controller"
 
 application.register("advanced-select", AdvancedSelectController)
 ```
@@ -187,9 +179,10 @@ The installed controller imports `Turbo` from `@hotwired/turbo-rails`, so the ho
 
 ### Stimulus Customization
 
-For importmap apps, customize behavior by adding only the host-specific overrides to the generated subclass:
+For importmap apps, customize behavior only when the host app needs it. Add a local subclass:
 
 ```js
+// app/javascript/controllers/advanced_select_controller.js
 import AdvancedSelectController from "advanced_select/advanced_select_controller"
 
 export default class extends AdvancedSelectController {
@@ -199,7 +192,14 @@ export default class extends AdvancedSelectController {
 }
 ```
 
-The host app still registers the controller as `advanced-select` through normal `stimulus-rails` eager loading. This keeps local custom behavior small while allowing future gem fixes to flow through the base controller.
+Then change the registration in `app/javascript/controllers/index.js` to import the local subclass:
+
+```js
+import AdvancedSelectController from "./advanced_select_controller"
+application.register("advanced-select", AdvancedSelectController)
+```
+
+This keeps local custom behavior small while allowing future gem fixes to flow through the base controller.
 
 For `jsbundling-rails` and other bundlers, the installer copies the full controller because bundlers do not resolve Rails engine JavaScript assets automatically. In that setup the copied file is host-owned.
 

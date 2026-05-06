@@ -18,7 +18,6 @@ module AdvancedSelect
       def install_stimulus_controller
         case setup
         when "importmap"
-          copy_file "advanced_select_controller_importmap.js", "app/javascript/controllers/advanced_select_controller.js"
           pin_importmap_controller
         when "jsbundling"
           copy_file "advanced_select_controller.js", "app/javascript/controllers/advanced_select_controller.js"
@@ -32,7 +31,7 @@ module AdvancedSelect
       def register_stimulus_controller
         case setup
         when "importmap"
-          say "Importmap setup selected; stimulus-rails eager loading should load the local advanced_select_controller.js override."
+          register_importmap_controller
         when "jsbundling"
           register_manifest_controller
         end
@@ -66,6 +65,20 @@ module AdvancedSelect
         append_to_file path, <<~RUBY
           pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"
         RUBY
+      end
+
+      def register_importmap_controller
+        path = "app/javascript/controllers/index.js"
+        unless File.exist?(target_path(path))
+          raise Thor::Error, "Could not find #{path} for --setup=importmap."
+        end
+        return if file_contains?(path, "advanced-select")
+
+        append_to_file path, <<~JS
+
+          import AdvancedSelectController from "advanced_select/advanced_select_controller"
+          application.register("advanced-select", AdvancedSelectController)
+        JS
       end
 
       def register_manifest_controller

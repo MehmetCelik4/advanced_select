@@ -9,12 +9,18 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
   destination File.expand_path("../../../tmp/generators/install", __dir__)
   setup :prepare_destination
 
-  test "installs importmap controller override and imports engine assets" do
+  test "registers importmap engine controller and imports engine assets" do
     write_destination_file "config/importmap.rb", <<~RUBY
       pin "application"
       pin "@hotwired/turbo-rails", to: "turbo.min.js"
       pin "@hotwired/stimulus", to: "stimulus.min.js"
     RUBY
+    write_destination_file "app/javascript/controllers/index.js", <<~JS
+      import { application } from "controllers/application"
+      import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
+
+      eagerLoadControllersFrom("controllers", application)
+    JS
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
        *= require_tree .
@@ -24,15 +30,16 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
 
     run_generator
 
-    assert_file "app/javascript/controllers/advanced_select_controller.js" do |content|
-      assert_includes content, 'import AdvancedSelectController from "advanced_select/advanced_select_controller"'
-      assert_includes content, "export default class extends AdvancedSelectController"
-    end
-
+    assert_no_file "app/javascript/controllers/advanced_select_controller.js"
     assert_no_file "app/assets/stylesheets/advanced_select.css"
 
     assert_file "config/importmap.rb" do |content|
       assert_includes content, 'pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"'
+    end
+
+    assert_file "app/javascript/controllers/index.js" do |content|
+      assert_includes content, 'import AdvancedSelectController from "advanced_select/advanced_select_controller"'
+      assert_includes content, 'application.register("advanced-select", AdvancedSelectController)'
     end
 
     assert_file "app/assets/stylesheets/application.css" do |content|
@@ -88,7 +95,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     end
   end
 
-  test "keeps importmap eager loading setup without manual registration" do
+  test "keeps importmap eager loading setup and adds explicit engine registration" do
     write_destination_file "app/javascript/controllers/index.js", <<~JS
       import { application } from "controllers/application"
       import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
@@ -100,11 +107,12 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
 
     assert_file "app/javascript/controllers/index.js" do |content|
       assert_includes content, "eagerLoadControllersFrom"
-      refute_includes content, "application.register(\"advanced-select\""
+      assert_includes content, 'application.register("advanced-select", AdvancedSelectController)'
     end
   end
 
   test "adds stylesheet require to importmap application css manifest" do
+    write_importmap_controller_index
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
        *= require base
@@ -124,6 +132,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
   end
 
   test "adds stylesheet require even when importmap application css requires tree" do
+    write_importmap_controller_index
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
        *= require_tree .
@@ -140,6 +149,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
   end
 
   test "does not duplicate importmap stylesheet require" do
+    write_importmap_controller_index
     write_destination_file "app/assets/stylesheets/application.css", <<~CSS
       /*
        *= require advanced_select/advanced_select
@@ -155,6 +165,7 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
   end
 
   test "does not duplicate importmap controller pin" do
+    write_importmap_controller_index
     write_destination_file "config/importmap.rb", <<~RUBY
       pin "application"
       pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"
@@ -167,7 +178,30 @@ class AdvancedSelectInstallGeneratorTest < Rails::Generators::TestCase
     end
   end
 
+  test "does not duplicate importmap controller registration" do
+    write_destination_file "app/javascript/controllers/index.js", <<~JS
+      import { application } from "controllers/application"
+      import AdvancedSelectController from "advanced_select/advanced_select_controller"
+      application.register("advanced-select", AdvancedSelectController)
+    JS
+
+    run_generator
+
+    assert_file "app/javascript/controllers/index.js" do |content|
+      assert_equal 1, content.scan("advanced-select").size
+    end
+  end
+
   private
+
+  def write_importmap_controller_index
+    write_destination_file "app/javascript/controllers/index.js", <<~JS
+      import { application } from "controllers/application"
+      import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
+
+      eagerLoadControllersFrom("controllers", application)
+    JS
+  end
 
   def write_jsbundling_fixture
     write_destination_file "app/javascript/application.js", <<~JS
