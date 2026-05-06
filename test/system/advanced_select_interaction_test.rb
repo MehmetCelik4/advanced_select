@@ -34,9 +34,9 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
   test "applies host class map to active add and selected states" do
     visit root_path
 
-    assert_selector "#example_styled_id_trigger.test-trigger-class"
+    assert_selector "#example_styled_id_trigger.ui-advanced-select-trigger.test-trigger-class"
 
-    find("#example_styled_id_summary").click
+    find("#example_styled_id_trigger").click
     assert_selector "#example_styled_id_options button.test-option-class.test-option-selected-class[data-advanced-select-option]", text: "Styled One"
     assert_no_selector "#example_styled_id_options button.ui-advanced-select-option", text: "Styled One"
 
@@ -46,7 +46,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_no_selector "#example_styled_id_options button.test-option-active-class", text: "Styled One"
 
     find("#example_styled_id_options button", text: "Styled Two").click
-    find("#example_styled_id_summary").click
+    find("#example_styled_id_trigger").click
 
     assert_selector "#example_styled_id_options button.test-option-selected-class", text: "Styled Two"
     assert_no_selector "#example_styled_id_options button.test-option-selected-class", text: "Styled One"

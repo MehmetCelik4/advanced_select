@@ -29,7 +29,8 @@
   ],
   placeholder: "Choose styled item",
   searchable: false,
-  classes: styled_advanced_select_classes
+  classes: styled_advanced_select_classes,
+  append_classes: styled_advanced_select_append_classes
 ) %>
 
 <%= advanced_select_tag(
@@ -40,5 +41,6 @@
   placeholder: "Search styled remote item",
   options_url: advanced_select_example_options_path,
   add_mode: true,
-  classes: styled_advanced_select_classes
+  classes: styled_advanced_select_classes,
+  append_classes: styled_advanced_select_append_classes
 ) %>

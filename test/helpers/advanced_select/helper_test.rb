@@ -132,6 +132,33 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_no_selector fragment, ".ui-advanced-select-option-description"
   end
 
+  test "appends host classes while keeping default styling hooks" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_extra_classed_item",
+        selected: nil,
+        options: [{ id: "item-1", label: "Item one" }],
+        placeholder: "Select",
+        searchable: false,
+        classes: {
+          option: "host-option hover:bg-red-500"
+        },
+        append_classes: {
+          trigger: "min-h-10 rounded-md border-gray-300",
+          dropdown: "shadow-lg",
+          option: "text-gray-700"
+        }
+      )
+    )
+
+    assert_class_equals fragment.at_css("#report_extra_classed_item_trigger"), "ui-advanced-select-trigger min-h-10 rounded-md border-gray-300"
+    assert_class_equals fragment.at_css("#report_extra_classed_item_dropdown"), "ui-advanced-select-dropdown shadow-lg hidden"
+    assert_class_equals fragment.at_css("[data-advanced-select-option]"), "host-option hover:bg-red-500 text-gray-700"
+
+    assert_no_selector fragment, ".ui-advanced-select-option"
+  end
+
   test "normalizes blank host classes" do
     fragment = html_fragment(
       advanced_select_tag(
@@ -174,6 +201,29 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_no_selector fragment, ".ui-advanced-select-options"
     assert_no_selector fragment, ".ui-advanced-select-option"
     assert_no_selector fragment, ".ui-advanced-select-add-option"
+  end
+
+  test "renders option-only appended classes for turbo stream replacements" do
+    fragment = html_fragment(
+      advanced_select_options_tag(
+        target_id: "report_user_ids_options",
+        selected: [{ id: 7, label: "Name" }],
+        options: [{ id: 7, label: "Name" }],
+        classes: {
+          option: "host-option",
+          option_selected: "host-selected"
+        },
+        append_classes: {
+          options: "max-h-72",
+          option: "text-gray-700"
+        }
+      )
+    )
+
+    assert_class_equals fragment.at_css("#report_user_ids_options"), "ui-advanced-select-options max-h-72"
+    assert_class_equals fragment.at_css("[data-advanced-select-option]"), "host-option text-gray-700 host-selected"
+
+    assert_no_selector fragment, ".ui-advanced-select-option"
   end
 
   test "marks multiple listbox as multiselectable" do

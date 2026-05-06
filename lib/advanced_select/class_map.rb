@@ -26,8 +26,9 @@ module AdvancedSelect
       error: "ui-advanced-select-error"
     }.freeze
 
-    def initialize(classes = {})
+    def initialize(classes = {}, append_classes = {})
       @classes = normalize(classes)
+      @append_classes = normalize(append_classes)
     end
 
     def class_name(*keys)
@@ -48,7 +49,7 @@ module AdvancedSelect
     end
 
     def class_for(key)
-      @classes.fetch(key) { DEFAULTS[key] }
+      [@classes.fetch(key) { DEFAULTS[key] }, @append_classes[key]].compact.reject(&:empty?).join(" ")
     end
   end
 end

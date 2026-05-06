@@ -580,7 +580,8 @@ advanced_select_tag(
   add_mode: false,
   dependent_fields: {},
   option_content_partial: nil,
-  classes: {}
+  classes: {},
+  append_classes: {}
 )
 ```
 
@@ -595,7 +596,8 @@ advanced_select_options_tag(
   add_mode: false,
   query: nil,
   option_content_partial: nil,
-  classes: {}
+  classes: {},
+  append_classes: {}
 )
 ```
 
@@ -608,10 +610,16 @@ This repo includes a committed local Nix flake for isolated development and test
 ```bash
 nix develop
 bundle install
-bundle exec ruby -Itest test/advanced_select/test.rb
-bundle exec ruby -Itest test/helpers/advanced_select/helper_test.rb
-bundle exec ruby -Itest test/system/advanced_select_interaction_test.rb
-bundle exec ruby -Itest test/system/jsbundling_advanced_select_interaction_test.rb
+bin/rails test test/advanced_select/test.rb
+bin/rails test test/helpers/advanced_select/helper_test.rb
+bin/rails test test/system/advanced_select_interaction_test.rb
+bin/rails test test/system/jsbundling_advanced_select_interaction_test.rb
+```
+
+With direnv enabled, `.envrc` loads the flake and adds `bin/` to `PATH`, so the same commands can be shortened further:
+
+```bash
+rails test test/helpers/advanced_select/helper_test.rb
 ```
 
 The system tests use Capybara with Playwright against two dummy Rails apps:
@@ -644,7 +652,9 @@ AdvancedSelect ships plain CSS defaults. When no `classes:` map is provided, ren
 
 ### Styling With Tailwind Classes
 
-Host apps can pass a `classes:` map to replace the default styling class for each mapped element. This avoids selector copying, `!important`, and separate CSS overrides for common Tailwind customization:
+Host apps can pass a `classes:` map to replace the default styling class for each mapped element. This is useful for option rows where the gem's default hover or selected styles should not compete with host Tailwind classes.
+
+Use `append_classes:` when the host app wants to keep the gem's structural defaults and add small adjustments to the end of the class list. This is usually better for structural elements such as `trigger`, `dropdown`, `summary`, and `search`.
 
 ```erb
 <%= advanced_select_tag(
@@ -654,19 +664,21 @@ Host apps can pass a `classes:` map to replace the default styling class for eac
   options: customer_type_options,
   placeholder: "Customer type",
   classes: {
-    trigger: "min-h-10 rounded-md border-gray-300",
     option: "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-gray-700 hover:bg-red-500 hover:text-white",
     option_active: "bg-red-500 text-white",
     option_selected: "bg-indigo-50 text-indigo-700"
+  },
+  append_classes: {
+    trigger: "min-h-10 rounded-md border-gray-300"
   }
 ) %>
 ```
 
-Class map values replace defaults per key; they are not appended to the default styling class. For example, if `classes[:option]` is present, option buttons use only that class string and do not also include `.ui-advanced-select-option`. Keys that are not present still use their default classes.
+Class map values replace defaults per key; they are not appended to the default styling class. For example, if `classes[:option]` is present, option buttons use only that class string and do not also include `.ui-advanced-select-option`. Keys that are not present still use their default classes. `append_classes:` values append after the resolved class for the same key. For example, `append_classes[:trigger]` renders `.ui-advanced-select-trigger` followed by the host classes.
 
 Use `option_active` for hover and keyboard active state. Stimulus adds and removes those classes as the active option changes. Use `add_option_active` when add-mode rows need a different active state. Use `option_selected` for selected state; it is rendered on initially selected options and updated by Stimulus when selection changes. `aria-selected="true"` is still preserved.
 
-Supported class map keys:
+Supported `classes:` and `append_classes:` keys:
 
 ```ruby
 classes: {
@@ -703,13 +715,14 @@ For remote Turbo Stream option replacement, pass the same class map to `advanced
   target_id: @target_id,
   selected: @selected_options,
   options: @options,
-  classes: advanced_select_classes
+  classes: advanced_select_classes,
+  append_classes: advanced_select_append_classes
 ) %>
 ```
 
 Tailwind content scanning can usually see class strings when they are written literally in ERB. If the host app builds class names dynamically, add the relevant classes to the app's Tailwind safelist.
 
-The host app can still load the gem CSS through `application.css`. Class map entries replace the mapped default classes for that helper call; unmapped keys keep the gem defaults.
+The host app can still load the gem CSS through `application.css`. `classes:` entries replace the mapped default classes for that helper call; unmapped keys keep the gem defaults. `append_classes:` entries keep the resolved class and append host classes after it.
 
 ### CSS Overrides
 
