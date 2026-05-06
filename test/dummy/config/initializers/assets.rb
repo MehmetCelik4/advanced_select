@@ -5,6 +5,5 @@ Rails.application.config.assets.version = "1.0"
 
 # Add additional assets to the asset load path.
 # Rails.application.config.assets.paths << Emoji.images_path
-Rails.application.config.assets.paths << AdvancedSelect::Engine.root.join("app/javascript")
 Rails.application.config.assets.paths << Pathname.new(Gem.loaded_specs.fetch("stimulus-rails").full_gem_path).join("app/assets/javascripts")
 Rails.application.config.assets.paths << Pathname.new(Gem.loaded_specs.fetch("turbo-rails").full_gem_path).join("app/assets/javascripts")

@@ -152,6 +152,8 @@ The installer also pins the engine controller:
 pin "advanced_select/advanced_select_controller", to: "advanced_select/advanced_select_controller.js"
 ```
 
+The engine exposes `advanced_select/advanced_select_controller.js` to the asset pipeline, so host apps should not need to add `AdvancedSelect::Engine.root.join("app/javascript")` to `config.assets.paths` or link the controller from `app/assets/config/manifest.js`.
+
 Importmap apps should already have a Stimulus entrypoint similar to this:
 
 ```js
