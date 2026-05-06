@@ -20,6 +20,67 @@
 ) %>
 
 <%= advanced_select_tag(
+  "example[multiple_ids][]",
+  id: "example_multiple_ids",
+  selected: [],
+  options: [
+    { id: "multi-1", label: "Multi One" },
+    { id: "multi-2", label: "Multi Two" }
+  ],
+  placeholder: "Choose multiple items",
+  multiple: true,
+  searchable: false
+) %>
+
+<%= advanced_select_tag(
+  "example[submit_id]",
+  id: "example_submit_id",
+  selected: nil,
+  options: [
+    { id: "identity-7", value: "submit-7", label: "Hierarchy > Submit Item", display_label: "Submit Item" }
+  ],
+  placeholder: "Choose submit item",
+  searchable: false
+) %>
+
+<%= advanced_select_tag(
+  "example[product_id]",
+  id: "example_product_id",
+  selected: nil,
+  options: [
+    { id: "product-1", code: "P-001", label: "Product One" }
+  ],
+  placeholder: "Choose product",
+  searchable: false,
+  option_content_partial: "advanced_select/option_contents/product"
+) %>
+
+<label for="example_dependency">Dependency</label>
+<select id="example_dependency" name="example[dependency]">
+  <option value="north">North</option>
+  <option value="south">South</option>
+</select>
+
+<%= advanced_select_tag(
+  "example[dependent_id]",
+  id: "example_dependent_id",
+  selected: nil,
+  options: [],
+  placeholder: "Search dependent item",
+  options_url: advanced_select_example_options_path,
+  dependent_fields: { region: "#example_dependency" }
+) %>
+
+<%= advanced_select_tag(
+  "example[error_id]",
+  id: "example_error_id",
+  selected: nil,
+  options: [],
+  placeholder: "Search error item",
+  options_url: advanced_select_example_options_path
+) %>
+
+<%= advanced_select_tag(
   "example[styled_id]",
   id: "example_styled_id",
   selected: { id: "styled-1", label: "Styled One" },

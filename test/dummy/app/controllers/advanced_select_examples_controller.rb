@@ -8,7 +8,9 @@ class AdvancedSelectExamplesController < ApplicationController
   def options
     @target_id = params.fetch(:target)
     @query = params[:query].to_s
-    @options = remote_options.select { |option| option.fetch(:label).downcase.include?(@query.downcase) }
+    return head :internal_server_error if @target_id == "example_error_id_options"
+
+    @options = options_for_target.select { |option| option.fetch(:label).downcase.include?(@query.downcase) }
 
     render formats: :turbo_stream
   end
@@ -36,6 +38,18 @@ class AdvancedSelectExamplesController < ApplicationController
     [
       { id: "remote-1", label: "Remote Alpha" },
       { id: "remote-2", label: "Remote Beta" }
+    ]
+  end
+
+  def options_for_target
+    return dependent_options if @target_id == "example_dependent_id_options"
+
+    remote_options
+  end
+
+  def dependent_options
+    [
+      { id: "dependent-#{params[:region]}", label: "Dependent #{params[:region].to_s.titleize}" }
     ]
   end
 end

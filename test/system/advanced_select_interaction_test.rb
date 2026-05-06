@@ -31,6 +31,70 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "#example_remote_id_summary", text: "Remote Beta"
   end
 
+  test "selects and deselects multiple local options" do
+    visit root_path
+
+    find("#example_multiple_ids_trigger").click
+    find("#example_multiple_ids_options button", text: "Multi One").click
+    find("#example_multiple_ids_options button", text: "Multi Two").click
+
+    assert_selector "input[name='example[multiple_ids][]'][value='multi-1']", visible: false
+    assert_selector "input[name='example[multiple_ids][]'][value='multi-2']", visible: false
+    assert_selector "#example_multiple_ids_summary", text: "Multi One"
+    assert_selector "#example_multiple_ids_summary", text: "Multi Two"
+
+    find("#example_multiple_ids_options button", text: "Multi One").click
+
+    assert_no_selector "input[name='example[multiple_ids][]'][value='multi-1']", visible: false
+    assert_selector "input[name='example[multiple_ids][]'][value='multi-2']", visible: false
+    assert_no_selector "#example_multiple_ids_summary", text: "Multi One"
+    assert_selector "#example_multiple_ids_summary", text: "Multi Two"
+  end
+
+  test "keeps option identity separate from submit value and uses display labels" do
+    visit root_path
+
+    find("#example_submit_id_trigger").click
+    find("#example_submit_id_options button", text: "Hierarchy > Submit Item").click
+
+    assert_selector "input[name='example[submit_id]'][value='submit-7']", visible: false
+    assert_selector "#example_submit_id_summary", text: "Submit Item"
+    assert_no_selector "#example_submit_id_summary", text: "Hierarchy > Submit Item"
+
+    find("#example_submit_id_trigger").click
+    assert_selector "#example_submit_id_options button[aria-selected='true'][data-advanced-select-value-param='identity-7'][data-advanced-select-submit-value-param='submit-7']", text: "Hierarchy > Submit Item"
+  end
+
+  test "selects options rendered with a custom option content partial" do
+    visit root_path
+
+    find("#example_product_id_trigger").click
+
+    assert_selector "#example_product_id_options .custom-product-code", text: "P-001"
+
+    find("#example_product_id_options button", text: "Product One").click
+
+    assert_selector "input[name='example[product_id]'][value='product-1']", visible: false
+    assert_selector "#example_product_id_summary", text: "Product One"
+  end
+
+  test "sends dependent field values with remote option requests" do
+    visit root_path
+
+    select "South", from: "example_dependency"
+    find("#example_dependent_id_trigger").click
+
+    assert_selector "#example_dependent_id_options button", text: "Dependent South"
+  end
+
+  test "renders remote error state when option loading fails" do
+    visit root_path
+
+    find("#example_error_id_trigger").click
+
+    assert_selector "#example_error_id_options .ui-advanced-select-error", text: "Options could not be loaded"
+  end
+
   test "applies host class map to active add and selected states" do
     visit root_path
 
@@ -61,5 +125,9 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     find("#example_styled_remote_id_options button", text: "Add Brand New").hover
     assert_selector "#example_styled_remote_id_options button.test-option-active-class.test-add-option-active-class", text: "Add Brand New"
     assert_no_selector "#example_styled_remote_id_options button.ui-advanced-select-option-active", text: "Add Brand New"
+
+    find("#example_styled_remote_id_options button", text: "Add Brand New").click
+    assert_selector "input[name='example[styled_remote_id]'][value='__new__:Brand New']", visible: false
+    assert_selector "#example_styled_remote_id_summary", text: "Brand New"
   end
 end
