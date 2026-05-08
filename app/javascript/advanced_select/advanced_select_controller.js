@@ -8,6 +8,7 @@ export default class extends Controller {
     delay: { type: Number, default: 200 },
     dependentFields: Object,
     errorText: String,
+    includeHidden: { type: Boolean, default: true },
     inputId: String,
     loadingText: String,
     multiple: Boolean,
@@ -312,7 +313,13 @@ export default class extends Controller {
   }
 
   get hiddenFieldElements() {
-    const options = this.multipleValue ? this.selectedValue : [this.selectedValue[0]]
+    let options
+
+    if (this.multipleValue) {
+      options = this.includeHiddenValue ? [null, ...this.selectedValue] : this.selectedValue
+    } else {
+      options = [this.selectedValue[0]]
+    }
 
     return options.map((option) => {
       const input = document.createElement("input")

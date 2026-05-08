@@ -410,6 +410,23 @@ For remote multiple options, pass `multiple: true` to the options render too:
 
 When users select an option from a long multiple-select list, AdvancedSelect moves that visible option to the top of the dropdown. This applies to both local options and remote Turbo Stream-refreshed option lists, so newly selected rows stay easy to review and deselect.
 
+For multiple selects, AdvancedSelect emits a blank hidden field (`<input type="hidden" name="..." value="">`) before the selected values, matching Rails' built-in `f.select multiple: true` and `f.collection_check_boxes` behavior. Without it, clearing every selection would leave the parameter out of the submission entirely, so Rails would skip updating the association instead of clearing it.
+
+Pass `include_hidden: false` to opt out — for example, when your controller relies on the parameter being absent for partial updates:
+
+```erb
+<%= advanced_select_tag(
+  "record[item_ids][]",
+  id: "record_item_ids",
+  selected: selected_options,
+  options: options,
+  placeholder: t(".items_placeholder"),
+  multiple: true,
+  include_hidden: false,
+  searchable: false
+) %>
+```
+
 ### Add Mode
 
 Set `add_mode: true` when users may submit a new typed value:
@@ -612,6 +629,7 @@ advanced_select_tag(
   searchable: true,
   add_mode: false,
   dependent_fields: {},
+  include_hidden: true,
   option_content_partial: nil,
   classes: {},
   append_classes: {}

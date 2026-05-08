@@ -242,6 +242,44 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_selector fragment, "#report_items_options[role='listbox'][aria-multiselectable='true']"
   end
 
+  test "renders a hidden blank field for multiple selects by default" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[items][]",
+        id: "report_items",
+        selected: [{ id: "item-1", label: "Item one" }],
+        options: [{ id: "item-1", label: "Item one" }],
+        placeholder: "Select",
+        multiple: true,
+        searchable: false
+      )
+    )
+
+    inputs = fragment.css("input[type='hidden'][name='report[items][]']")
+
+    assert_equal ["", "item-1"], inputs.map { |input| input["value"] }
+    assert_nil inputs.first["id"]
+  end
+
+  test "does not render a hidden blank field when include_hidden is false" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[items][]",
+        id: "report_items",
+        selected: [{ id: "item-1", label: "Item one" }],
+        options: [{ id: "item-1", label: "Item one" }],
+        placeholder: "Select",
+        multiple: true,
+        include_hidden: false,
+        searchable: false
+      )
+    )
+
+    inputs = fragment.css("input[type='hidden'][name='report[items][]']")
+
+    assert_equal ["item-1"], inputs.map { |input| input["value"] }
+  end
+
   test "renders custom option content while keeping the engine option wrapper" do
     fragment = html_fragment(
       advanced_select_tag(

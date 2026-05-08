@@ -11,6 +11,7 @@
      data-advanced-select-multiple-value="<%= multiple %>"
      data-advanced-select-searchable-value="<%= searchable %>"
      data-advanced-select-add-mode-value="<%= add_mode %>"
+     data-advanced-select-include-hidden-value="<%= include_hidden %>"
      data-advanced-select-placeholder-class="<%= advanced_select_class(class_map, :placeholder) %>"
      data-advanced-select-value-class="<%= advanced_select_class(class_map, :value) %>"
      data-advanced-select-token-class="<%= advanced_select_class(class_map, :token) %>"
@@ -22,6 +23,9 @@
      data-advanced-select-selected-value="<%= advanced_select_selected_value(selected_options) %>">
   <div data-advanced-select-target="hiddenFields">
     <% if multiple %>
+      <% if include_hidden %>
+        <%= hidden_field_tag name, "", id: nil %>
+      <% end %>
       <% selected_options.each do |option| %>
         <%= hidden_field_tag name, option.fetch(:value, option.fetch(:id)) %>
       <% end %>

@@ -48,6 +48,20 @@
 ) %>
 
 <%= advanced_select_tag(
+  "example[multiple_ids_without_blank][]",
+  id: "example_multiple_ids_without_blank",
+  selected: [],
+  options: [
+    { id: "multi-1", label: "Multi One" },
+    { id: "multi-2", label: "Multi Two" }
+  ],
+  placeholder: "Choose multiple items without blank hidden",
+  multiple: true,
+  include_hidden: false,
+  searchable: false
+) %>
+
+<%= advanced_select_tag(
   "example[submit_id]",
   id: "example_submit_id",
   selected: nil,
