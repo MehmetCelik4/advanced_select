@@ -312,7 +312,7 @@ export default class extends Controller {
   }
 
   get hiddenFieldElements() {
-    const options = this.multipleValue ? [null, ...this.selectedValue] : [this.selectedValue[0]]
+    const options = this.multipleValue ? this.selectedValue : [this.selectedValue[0]]
 
     return options.map((option) => {
       const input = document.createElement("input")
