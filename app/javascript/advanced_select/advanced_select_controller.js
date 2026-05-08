@@ -37,6 +37,7 @@ export default class extends Controller {
       displayLabel: option.displayLabel || option.label
     }))
     this.close = this.close.bind(this)
+    this.renderOptionsState()
   }
 
   disconnect() {
@@ -214,7 +215,7 @@ export default class extends Controller {
       if (this.selectedValue.some((option) => option.id === value)) {
         this.selectedValue = this.selectedValue.filter((option) => option.id !== value)
       } else {
-        this.selectedValue = this.selectedValue.concat({ id: value, value: submitValue, label, displayLabel })
+        this.selectedValue = [{ id: value, value: submitValue, label, displayLabel }, ...this.selectedValue]
       }
     } else {
       this.selectedValue = [{ id: value, value: submitValue, label, displayLabel }]
@@ -240,6 +241,7 @@ export default class extends Controller {
 
   renderOptionsState() {
     const selectedIds = new Set(this.selectedValue.map((option) => option.id))
+    const container = this.currentOptionsTarget
 
     this.optionElements.forEach((option) => {
       const selected = selectedIds.has(option.dataset.advancedSelectValueParam)
@@ -251,6 +253,13 @@ export default class extends Controller {
         check.textContent = selected ? "\u2713" : ""
       }
     })
+
+    for (let i = this.selectedValue.length - 1; i >= 0; i--) {
+      const option = container.querySelector(
+        `[data-advanced-select-option][data-advanced-select-value-param="${this.selectedValue[i].id}"]`
+      )
+      if (option) container.prepend(option)
+    }
   }
 
   chooseActiveOption() {

@@ -74,6 +74,21 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "#example_multiple_ids_summary", text: "Multi Two"
   end
 
+  test "moves newly selected multiple options to the top of local and remote lists" do
+    visit root_path
+
+    find("#example_multiple_ids_trigger").click
+    find("#example_multiple_ids_options button", text: "Multi One").click
+    find("#example_multiple_ids_options button", text: "Multi Two").click
+
+    assert_first_option_value "example_multiple_ids", "multi-2"
+
+    find("#example_remote_multiple_ids_trigger").click
+    find("#example_remote_multiple_ids_options button", text: "Remote Delta").click
+
+    assert_first_option_value "example_remote_multiple_ids", "remote-4"
+  end
+
   test "keeps option identity separate from submit value and uses display labels" do
     visit root_path
 
@@ -160,5 +175,9 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     option = find("##{select_id}_options button[aria-selected='true']", text: text)
 
     assert_equal "\u2713", option.find("[data-advanced-select-option-check]").text
+  end
+
+  def assert_first_option_value(select_id, value)
+    assert_selector "##{select_id}_options button:first-child[data-advanced-select-value-param='#{value}']"
   end
 end
