@@ -36,6 +36,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
     find("#example_remote_multiple_ids_trigger").click
 
+    assert_selector "input[name='example[remote_multiple_ids][]'][value='']", visible: false
     assert_selected_option_check "example_remote_multiple_ids", "Remote Alpha"
     assert_selected_option_check "example_remote_multiple_ids", "Remote Beta"
     assert_selected_option_check "example_remote_multiple_ids", "Remote Gamma"
@@ -48,6 +49,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "input[name='example[remote_multiple_ids][]'][value='remote-4']", visible: false
     assert_selector "#example_remote_multiple_ids_summary", text: "& +2"
 
+    assert_selector "#example_remote_multiple_ids_options button:first-child[data-advanced-select-value-param='remote-4']"
     assert_selected_option_check "example_remote_multiple_ids", "Remote Alpha"
     assert_selected_option_check "example_remote_multiple_ids", "Remote Beta"
     assert_selected_option_check "example_remote_multiple_ids", "Remote Gamma"
@@ -57,10 +59,13 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
   test "selects and deselects multiple local options" do
     visit root_path
 
+    assert_selector "input[name='example[multiple_ids][]'][value='']", visible: false
+
     find("#example_multiple_ids_trigger").click
     find("#example_multiple_ids_options button", text: "Multi One").click
     find("#example_multiple_ids_options button", text: "Multi Two").click
 
+    assert_selector "#example_multiple_ids_options button:first-child[data-advanced-select-value-param='multi-2']"
     assert_selector "input[name='example[multiple_ids][]'][value='multi-1']", visible: false
     assert_selector "input[name='example[multiple_ids][]'][value='multi-2']", visible: false
     assert_selector "#example_multiple_ids_summary", text: "Multi One"
@@ -72,6 +77,28 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "input[name='example[multiple_ids][]'][value='multi-2']", visible: false
     assert_no_selector "#example_multiple_ids_summary", text: "Multi One"
     assert_selector "#example_multiple_ids_summary", text: "Multi Two"
+
+    find("#example_multiple_ids_options button", text: "Multi Two").click
+
+    assert_selector "input[name='example[multiple_ids][]'][value='']", visible: false
+    assert_no_selector "input[name='example[multiple_ids][]'][value='multi-2']", visible: false
+  end
+
+  test "omits the hidden blank field when include_hidden is false" do
+    visit root_path
+
+    assert_no_selector "input[name='example[multiple_ids_without_blank][]'][value='']", visible: false
+
+    find("#example_multiple_ids_without_blank_trigger").click
+    find("#example_multiple_ids_without_blank_options button", text: "Multi One").click
+
+    assert_selector "input[name='example[multiple_ids_without_blank][]'][value='multi-1']", visible: false
+    assert_no_selector "input[name='example[multiple_ids_without_blank][]'][value='']", visible: false
+
+    find("#example_multiple_ids_without_blank_options button", text: "Multi One").click
+
+    assert_no_selector "input[name='example[multiple_ids_without_blank][]'][value='multi-1']", visible: false
+    assert_no_selector "input[name='example[multiple_ids_without_blank][]'][value='']", visible: false
   end
 
   test "moves newly selected multiple options to the top of local and remote lists" do
