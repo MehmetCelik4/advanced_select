@@ -408,6 +408,8 @@ For remote multiple options, pass `multiple: true` to the options render too:
 ) %>
 ```
 
+When users select an option from a long multiple-select list, AdvancedSelect moves that visible option to the top of the dropdown. This applies to both local options and remote Turbo Stream-refreshed option lists, so newly selected rows stay easy to review and deselect.
+
 ### Add Mode
 
 Set `add_mode: true` when users may submit a new typed value:
