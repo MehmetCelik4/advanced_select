@@ -4,13 +4,15 @@
      aria-busy="false"
      <% if local_assigns[:multiple] %>aria-multiselectable="true"<% end %>
      role="listbox">
+  <% selected_option_ids = advanced_select_selected_option_ids(selected_options) %>
+
   <% advanced_select_option_groups(options).each do |group| %>
     <% if group[:label].present? %>
       <div class="<%= advanced_select_class(class_map, :group_label) %>"><%= group.fetch(:label) %></div>
     <% end %>
 
     <% group.fetch(:options).each do |option| %>
-      <%= render partial: "advanced_select/option", locals: { option: option, selected_options: selected_options, option_content_partial: option_content_partial, class_map: class_map } %>
+      <%= advanced_select_option_tag(option, selected_options, option_content_partial, class_map, selected_option_ids: selected_option_ids) %>
     <% end %>
   <% end %>
 
