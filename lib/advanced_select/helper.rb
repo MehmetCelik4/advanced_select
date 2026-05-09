@@ -60,6 +60,56 @@ module AdvancedSelect
       end.to_json
     end
 
+    def advanced_select_option_tag(option, selected_options, option_content_partial, class_map, selected_option_ids: nil)
+      selected = advanced_select_option_selected?(option, selected_options, selected_option_ids)
+
+      tag.button(
+        type: "button",
+        class: advanced_select_class(class_map, :option, (:option_selected if selected)),
+        role: "option",
+        aria: { selected: selected },
+        data: {
+          advanced_select_option: "",
+          action: "mouseenter->advanced-select#activateOption mousedown->advanced-select#choose",
+          advanced_select_value_param: option.fetch(:id),
+          advanced_select_submit_value_param: advanced_select_option_value(option),
+          advanced_select_label_param: advanced_select_option_label(option),
+          advanced_select_display_label_param: advanced_select_option_display_label(option)
+        }
+      ) do
+        safe_join([
+          tag.span(
+            (selected ? "\u2713" : ""),
+            class: advanced_select_class(class_map, :option_check),
+            data: { advanced_select_option_check: "" }
+          ),
+          advanced_select_option_content_tag(option, option_content_partial, class_map)
+        ])
+      end
+    end
+
+    def advanced_select_option_content_tag(option, option_content_partial, class_map)
+      if option_content_partial.present?
+        render partial: option_content_partial, locals: { option: option }
+      else
+        advanced_select_default_option_content_tag(option, class_map)
+      end
+    end
+
+    def advanced_select_default_option_content_tag(option, class_map)
+      description = advanced_select_option_description(option)
+      content = [tag.span(advanced_select_option_label(option))]
+
+      if description.present?
+        content << tag.span(
+          description,
+          class: advanced_select_class(class_map, :option_description)
+        )
+      end
+
+      tag.span(safe_join(content), class: advanced_select_class(class_map, :option_content))
+    end
+
     def advanced_select_options_for_render(options, selected_options, searchable)
       searchable ? selected_options.presence || options : options
     end
@@ -83,7 +133,15 @@ module AdvancedSelect
       end
     end
 
-    def advanced_select_option_selected?(option, selected_options)
+    def advanced_select_selected_option_ids(selected_options)
+      selected_options.each_with_object({}) do |selected_option, selected_option_ids|
+        selected_option_ids[selected_option.fetch(:id).to_s] = true
+      end
+    end
+
+    def advanced_select_option_selected?(option, selected_options, selected_option_ids = nil)
+      return selected_option_ids.key?(option.fetch(:id).to_s) if selected_option_ids
+
       selected_options.any? { |selected_option| selected_option.fetch(:id).to_s == option.fetch(:id).to_s }
     end
 

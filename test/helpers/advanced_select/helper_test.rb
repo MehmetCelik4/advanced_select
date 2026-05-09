@@ -70,6 +70,32 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_selector fragment, "#report_grouped_item_options .ui-advanced-select-option-description", text: "Last used"
   end
 
+  test "renders default option rows without per-option internal partials" do
+    partials = rendered_partials do
+      fragment = html_fragment(
+        advanced_select_tag(
+          "report[item]",
+          id: "report_fast_item",
+          selected: { id: "item-2", label: "Item two" },
+          options: [
+            { id: "item-1", label: "Item one" },
+            { id: "item-2", label: "Item two", description: "Selected" },
+            { id: "item-3", label: "Item three" }
+          ],
+          placeholder: "Select",
+          searchable: false
+        )
+      )
+
+      assert_selector fragment, "#report_fast_item_options button[data-advanced-select-value-param='item-2'][aria-selected='true']"
+      assert_selector fragment, "#report_fast_item_options .ui-advanced-select-option-description", text: "Selected"
+    end
+
+    assert_includes partials, "advanced_select/_options"
+    refute_includes partials, "advanced_select/_option"
+    refute_includes partials, "advanced_select/_default_option_content"
+  end
+
   test "renders public styling hooks" do
     fragment = html_fragment(
       advanced_select_tag(
@@ -375,6 +401,28 @@ class AdvancedSelectHelperTest < ActionView::TestCase
 
   def html_fragment(html)
     Nokogiri::HTML.fragment(html.to_s)
+  end
+
+  def rendered_partials
+    partials = []
+    subscriber = ActiveSupport::Notifications.subscribe("render_partial.action_view") do |_event, _started, _finished, _id, payload|
+      partials << rendered_partial_path(payload)
+    end
+
+    yield
+    partials
+  ensure
+    ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
+  end
+
+  def rendered_partial_path(payload)
+    virtual_path = payload[:virtual_path].to_s
+    return virtual_path if virtual_path.present?
+
+    identifier = payload[:identifier].to_s
+    views_path = "#{AdvancedSelect::Engine.root}/app/views/"
+
+    identifier.delete_prefix(views_path).delete_suffix(".html.erb").delete_suffix(".erb")
   end
 
   def assert_selector(fragment, selector, text: nil, visible: nil)
