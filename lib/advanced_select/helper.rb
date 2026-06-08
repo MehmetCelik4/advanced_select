@@ -12,7 +12,7 @@ module AdvancedSelect
         options: options,
         placeholder: placeholder,
         multiple: multiple,
-        searchable: searchable && options_url.present?,
+        searchable: searchable,
         add_mode: add_mode,
         dependent_fields: dependent_fields,
         include_hidden: include_hidden,

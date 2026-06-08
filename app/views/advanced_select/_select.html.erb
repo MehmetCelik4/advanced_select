@@ -5,6 +5,7 @@
      data-advanced-select-name-value="<%= name %>"
      data-advanced-select-input-id-value="<%= id %>"
      data-advanced-select-placeholder-value="<%= placeholder %>"
+     data-advanced-select-empty-text-value="<%= t("shared.advanced_select.empty") %>"
      data-advanced-select-loading-text-value="<%= t("shared.advanced_select.loading") %>"
      data-advanced-select-error-text-value="<%= t("shared.advanced_select.error") %>"
      data-advanced-select-dependent-fields-value="<%= dependent_fields.to_json %>"
@@ -15,6 +16,7 @@
      data-advanced-select-placeholder-class="<%= advanced_select_class(class_map, :placeholder) %>"
      data-advanced-select-value-class="<%= advanced_select_class(class_map, :value) %>"
      data-advanced-select-token-class="<%= advanced_select_class(class_map, :token) %>"
+     data-advanced-select-empty-class="<%= advanced_select_class(class_map, :empty) %>"
      data-advanced-select-loading-class="<%= advanced_select_class(class_map, :loading) %>"
      data-advanced-select-error-class="<%= advanced_select_class(class_map, :error) %>"
      data-advanced-select-option-active-class="<%= advanced_select_state_class(class_map, :option_active) %>"
@@ -56,7 +58,7 @@
       <%= tag.input type: "search",
                     id: "#{id}_search",
                     autocomplete: "off",
-                    placeholder: placeholder,
+                    placeholder: t("shared.advanced_select.search_placeholder"),
                     class: advanced_select_class(class_map, :search),
                     data: {
                       advanced_select_target: "search",

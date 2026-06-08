@@ -7,6 +7,7 @@ export default class extends Controller {
     addMode: Boolean,
     delay: { type: Number, default: 200 },
     dependentFields: Object,
+    emptyText: String,
     errorText: String,
     includeHidden: { type: Boolean, default: true },
     inputId: String,
@@ -29,6 +30,7 @@ export default class extends Controller {
     this.tokenClass = this.element.dataset.advancedSelectTokenClass || "ui-advanced-select-token"
     this.loadingClass = this.element.dataset.advancedSelectLoadingClass || "ui-advanced-select-loading"
     this.errorClass = this.element.dataset.advancedSelectErrorClass || "ui-advanced-select-error"
+    this.emptyClass = this.element.dataset.advancedSelectEmptyClass || "ui-advanced-select-empty"
     this.optionActiveClasses = this.classList(this.element.dataset.advancedSelectOptionActiveClass || "ui-advanced-select-option-active")
     this.addOptionActiveClasses = this.classList(this.element.dataset.advancedSelectAddOptionActiveClass || "")
     this.optionSelectedClasses = this.classList(this.element.dataset.advancedSelectOptionSelectedClass || "")
@@ -81,6 +83,12 @@ export default class extends Controller {
   }
 
   search() {
+    if (!this.urlValue) {
+      this.filterOptions()
+      this.activate(-1)
+      return
+    }
+
     window.clearTimeout(this.timer)
     this.renderLoading()
     this.activate(-1)
@@ -127,7 +135,55 @@ export default class extends Controller {
   clearSearch() {
     if (this.searchableValue) {
       this.searchTarget.value = ""
+
+      if (!this.urlValue) {
+        this.filterOptions()
+      }
     }
+  }
+
+  filterOptions() {
+    const query = this.normalize(this.searchTarget.value)
+    const container = this.currentOptionsTarget
+    let visibleCount = 0
+    let currentGroup = null
+    let groupHasMatch = false
+
+    Array.from(container.children).forEach((child) => {
+      if (child.hasAttribute("data-advanced-select-group-label")) {
+        if (currentGroup) currentGroup.classList.toggle("hidden", !groupHasMatch)
+        currentGroup = child
+        groupHasMatch = false
+      } else if (child.hasAttribute("data-advanced-select-option")) {
+        const match = this.normalize(child.dataset.advancedSelectLabelParam).includes(query)
+        child.classList.toggle("hidden", !match)
+        if (match) {
+          visibleCount += 1
+          groupHasMatch = true
+        }
+      }
+    })
+
+    if (currentGroup) currentGroup.classList.toggle("hidden", !groupHasMatch)
+
+    this.toggleEmptyState(visibleCount === 0)
+  }
+
+  toggleEmptyState(empty) {
+    const container = this.currentOptionsTarget
+    let emptyState = container.querySelector("[data-advanced-select-empty-state]")
+
+    if (empty && !emptyState) {
+      emptyState = this.textElement("div", this.emptyClass, this.emptyTextValue)
+      emptyState.setAttribute("data-advanced-select-empty-state", "")
+      container.appendChild(emptyState)
+    } else if (!empty && emptyState) {
+      emptyState.remove()
+    }
+  }
+
+  normalize(text) {
+    return (text || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   }
 
   fetchOptions({ selected = false } = {}) {

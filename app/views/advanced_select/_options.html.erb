@@ -8,7 +8,7 @@
 
   <% advanced_select_option_groups(options).each do |group| %>
     <% if group[:label].present? %>
-      <div class="<%= advanced_select_class(class_map, :group_label) %>"><%= group.fetch(:label) %></div>
+      <div class="<%= advanced_select_class(class_map, :group_label) %>" data-advanced-select-group-label><%= group.fetch(:label) %></div>
     <% end %>
 
     <% group.fetch(:options).each do |option| %>
@@ -28,6 +28,6 @@
       <%= t("shared.advanced_select.add_option", query: query) %>
     </button>
   <% elsif advanced_select_options_empty?(options) %>
-    <div class="<%= advanced_select_class(class_map, :empty) %>"><%= t("shared.advanced_select.empty") %></div>
+    <div class="<%= advanced_select_class(class_map, :empty) %>" data-advanced-select-empty-state><%= t("shared.advanced_select.empty") %></div>
   <% end %>
 </div>

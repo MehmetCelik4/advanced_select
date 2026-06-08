@@ -35,6 +35,7 @@
               export BUNDLE_BIN="$PWD/.bundle/bin"
               export PKG_CONFIG_PATH="${pkgs.libyaml.dev}/lib/pkgconfig''${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
               export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
+              export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="${pkgs.playwright-driver.components.chromium-headless-shell}/chrome-headless-shell-linux64/chrome-headless-shell"
               export PLAYWRIGHT_CLI_EXECUTABLE_PATH="${playwright}/bin/playwright"
             '';
           };

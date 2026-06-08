@@ -5,3 +5,4 @@ tr:
       empty: "Seçenek bulunamadı"
       error: "Seçenekler yüklenemedi"
       loading: "Yükleniyor..."
+      search_placeholder: "Ara..."
