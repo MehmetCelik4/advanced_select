@@ -316,10 +316,11 @@ Use local options when the complete option list is already available while rende
   id: "record_item_id",
   selected: selected_option,
   options: options,
-  placeholder: t(".item_placeholder"),
-  searchable: false
+  placeholder: t(".item_placeholder")
 ) %>
 ```
+
+Local selects are searchable by default. Set `searchable: false` when the option list should open without a search field.
 
 Options are hashes:
 

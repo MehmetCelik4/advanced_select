@@ -70,6 +70,24 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_selector fragment, "#report_grouped_item_options .ui-advanced-select-option-description", text: "Last used"
   end
 
+  test "renders local client search with translated search placeholder" do
+    I18n.locale = :tr
+
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_local_item",
+        selected: nil,
+        options: [{ id: "item-1", label: "Item one" }],
+        placeholder: "Lütfen seçiniz"
+      )
+    )
+
+    assert_selector fragment, "#report_local_item_summary .ui-advanced-select-placeholder", text: "Lütfen seçiniz"
+    assert_selector fragment, "#report_local_item_search[placeholder='Ara...']"
+    assert_selector fragment, "#report_local_item_options button[data-advanced-select-value-param='item-1']", text: "Item one"
+  end
+
   test "renders public styling hooks" do
     fragment = html_fragment(
       advanced_select_tag(

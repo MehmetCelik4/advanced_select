@@ -5,3 +5,4 @@ en:
       empty: "No options found"
       error: "Options could not be loaded"
       loading: "Loading..."
+      search_placeholder: "Search..."

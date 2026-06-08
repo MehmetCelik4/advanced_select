@@ -15,6 +15,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     visit root_path
 
     find("#example_item_id_trigger").click
+    assert_field "example_item_id_search", placeholder: "Search..."
     find("#example_item_id_options button", text: "Local One").click
 
     assert_selector "input[name='example[item_id]'][value='local-1']", visible: false
@@ -29,6 +30,20 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
     assert_selector "input[name='example[remote_id]'][value='remote-2']", visible: false
     assert_selector "#example_remote_id_summary", text: "Remote Beta"
+  end
+
+  test "filters local options on the client" do
+    visit root_path
+
+    find("#example_item_id_trigger").click
+    fill_in "example_item_id_search", with: "Two"
+
+    assert_selector "#example_item_id_options button", text: "Local Two"
+    assert_no_selector "#example_item_id_options button", text: "Local One"
+
+    fill_in "example_item_id_search", with: "Missing"
+
+    assert_selector "#example_item_id_options .ui-advanced-select-empty", text: "No options found"
   end
 
   test "keeps remote multiple selected ticks after turbo stream replacements" do
