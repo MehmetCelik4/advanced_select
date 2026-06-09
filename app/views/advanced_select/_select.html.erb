@@ -15,9 +15,12 @@
      data-advanced-select-include-hidden-value="<%= include_hidden %>"
      data-advanced-select-auto-select-single-value="<%= auto_select_single %>"
      data-advanced-select-eager-value="<%= eager %>"
+     data-advanced-select-summary-mode-value="<%= summary_mode %>"
+     data-advanced-select-selected-count-text-value="<%= t("shared.advanced_select.selected_count", count: "%{count}") %>"
      data-advanced-select-placeholder-class="<%= advanced_select_class(class_map, :placeholder) %>"
      data-advanced-select-value-class="<%= advanced_select_class(class_map, :value) %>"
      data-advanced-select-token-class="<%= advanced_select_class(class_map, :token) %>"
+     data-advanced-select-tooltip-item-class="<%= advanced_select_class(class_map, :tooltip_item) %>"
      data-advanced-select-empty-class="<%= advanced_select_class(class_map, :empty) %>"
      data-advanced-select-loading-class="<%= advanced_select_class(class_map, :loading) %>"
      data-advanced-select-error-class="<%= advanced_select_class(class_map, :error) %>"
@@ -38,6 +41,8 @@
     <% end %>
   </div>
 
+  <% tooltip_enabled = tooltip || tooltip_partial.present? %>
+  
   <button type="button"
           id="<%= "#{id}_trigger" %>"
           class="<%= advanced_select_class(class_map, :trigger) %>"
@@ -45,13 +50,32 @@
           aria-expanded="false"
           aria-controls="<%= "#{id}_dropdown" %>"
           data-advanced-select-target="trigger"
-          data-action="advanced-select#toggle keydown->advanced-select#keydown">
+          data-action="advanced-select#toggle keydown->advanced-select#keydown<%= " mouseenter->advanced-select#showTooltip mouseleave->advanced-select#hideTooltip" if tooltip_enabled %>">
     <span id="<%= "#{id}_summary" %>" class="<%= advanced_select_class(class_map, :summary) %>" data-advanced-select-target="summary">
-      <%= render partial: "advanced_select/summary", locals: { selected_options: selected_options, multiple: multiple, placeholder: placeholder, class_map: class_map } %>
+      <%= render partial: "advanced_select/summary", locals: { selected_options: selected_options, multiple: multiple, placeholder: placeholder, summary_mode: summary_mode, class_map: class_map } %>
     </span>
     <span id="<%= "#{id}_caret" %>" class="<%= [advanced_select_class(class_map, :caret), ("hidden" if selected_options.any?)].compact.join(" ") %>" data-advanced-select-target="caret">&#8964;</span>
     <span id="<%= "#{id}_clear" %>" class="<%= [advanced_select_class(class_map, :clear), ("hidden" if selected_options.empty?)].compact.join(" ") %>" data-advanced-select-target="clear" data-action="click->advanced-select#clear">&times;</span>
   </button>
+
+  <% if tooltip_enabled %>
+    <div id="<%= "#{id}_tooltip" %>"
+         class="<%= [advanced_select_class(class_map, :tooltip), "hidden"].join(" ") %>"
+         role="tooltip"
+         data-advanced-select-target="tooltip"
+         <%= "data-advanced-select-tooltip-custom" if tooltip_partial.present? %>
+         data-action="mouseenter->advanced-select#keepTooltip mouseleave->advanced-select#hideTooltip">
+      <% if tooltip_partial.present? %>
+        <%= render partial: tooltip_partial, locals: { selected_options: selected_options, options: options } %>
+      <% else %>
+        <ul class="<%= advanced_select_class(class_map, :tooltip_list) %>" data-advanced-select-tooltip-list>
+          <% selected_options.each do |option| %>
+            <li class="<%= advanced_select_class(class_map, :tooltip_item) %>"><%= option.fetch(:display_label) %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  <% end %>
 
   <div id="<%= "#{id}_dropdown" %>"
        class="<%= [advanced_select_class(class_map, :dropdown), "hidden"].join(" ") %>"

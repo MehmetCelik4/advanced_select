@@ -342,6 +342,94 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_selector fragment, "#report_items_options[role='listbox'][aria-multiselectable='true']"
   end
 
+  test "renders a count summary for multiple selects when summary_mode is count" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[items][]",
+        id: "report_items",
+        selected: [
+          { id: "item-1", label: "Item one" },
+          { id: "item-2", label: "Item two" },
+          { id: "item-3", label: "Item three" }
+        ],
+        options: [],
+        placeholder: "Select",
+        multiple: true,
+        searchable: false,
+        summary_mode: :count
+      )
+    )
+
+    root = fragment.at_css(".ui-advanced-select")
+
+    assert_equal "count", root["data-advanced-select-summary-mode-value"]
+    assert_equal "%{count} selected", root["data-advanced-select-selected-count-text-value"]
+    assert_selector fragment, "#report_items_summary .ui-advanced-select-value", text: "3 selected"
+    assert_no_selector fragment, "#report_items_summary .ui-advanced-select-token"
+  end
+
+  test "renders a built-in tooltip listing selected options" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[items][]",
+        id: "report_items",
+        selected: [
+          { id: "item-1", label: "Item one" },
+          { id: "item-2", label: "Item two" }
+        ],
+        options: [],
+        placeholder: "Select",
+        multiple: true,
+        searchable: false,
+        summary_mode: :count,
+        tooltip: true
+      )
+    )
+
+    assert_selector fragment, "#report_items_tooltip[role='tooltip'].hidden"
+    assert_selector fragment, "#report_items_tooltip .ui-advanced-select-tooltip-list[data-advanced-select-tooltip-list]"
+
+    items = fragment.css("#report_items_tooltip .ui-advanced-select-tooltip-item")
+
+    assert_equal ["Item one", "Item two"], items.map(&:text)
+    assert_selector fragment, "#report_items_trigger[data-action*='mouseenter->advanced-select#showTooltip']"
+  end
+
+  test "renders a custom tooltip partial when tooltip_partial is given" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[items][]",
+        id: "report_items",
+        selected: [{ id: "item-1", label: "Item one" }],
+        options: [],
+        placeholder: "Select",
+        multiple: true,
+        searchable: false,
+        tooltip_partial: "advanced_select/tooltips/alternatives"
+      )
+    )
+
+    assert_selector fragment, "#report_items_tooltip[data-advanced-select-tooltip-custom]"
+    assert_no_selector fragment, "#report_items_tooltip [data-advanced-select-tooltip-list]"
+  end
+
+  test "omits the tooltip element when tooltip is disabled" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[items][]",
+        id: "report_items",
+        selected: [{ id: "item-1", label: "Item one" }],
+        options: [],
+        placeholder: "Select",
+        multiple: true,
+        searchable: false
+      )
+    )
+
+    assert_no_selector fragment, "#report_items_tooltip"
+    assert_selector fragment, "#report_items_trigger[data-action='advanced-select#toggle keydown->advanced-select#keydown']"
+  end
+
   test "renders a hidden blank field for multiple selects by default" do
     fragment = html_fragment(
       advanced_select_tag(

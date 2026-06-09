@@ -6,3 +6,4 @@ en:
       error: "Options could not be loaded"
       loading: "Loading..."
       search_placeholder: "Search..."
+      selected_count: "%{count} selected"

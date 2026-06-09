@@ -268,6 +268,45 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "#example_styled_remote_id_summary", text: "Brand New"
   end
 
+  test "renders a count summary instead of tokens when summary_mode is count" do
+    visit root_path
+
+    assert_selector "#example_count_ids_summary", text: "3 selected"
+    assert_no_selector "#example_count_ids_summary", text: "& +"
+
+    find("#example_count_ids_trigger").click
+    find("#example_count_ids_options button", text: "Multi Three").click
+    find("#example_count_ids_trigger").send_keys(:escape)
+
+    assert_selector "#example_count_ids_summary", text: "2 selected"
+  end
+
+  test "shows a built-in tooltip listing the selected options on hover" do
+    visit root_path
+
+    assert_selector "#example_tooltip_ids_tooltip.hidden", visible: false
+
+    find("#example_tooltip_ids_trigger").hover
+
+    assert_selector "#example_tooltip_ids_tooltip:not(.hidden)"
+    within "#example_tooltip_ids_tooltip" do
+      assert_text "Multi One"
+      assert_text "Multi Two"
+    end
+  end
+
+  test "renders a custom tooltip partial on hover" do
+    visit root_path
+
+    find("#example_tooltip_partial_ids_trigger").hover
+
+    within "#example_tooltip_partial_ids_tooltip" do
+      assert_selector "table.advanced-select-tooltip-table"
+      assert_text "ALT-001 – Antikor A"
+      assert_text "Muadil"
+    end
+  end
+
   private
 
   def assert_selected_option_check(select_id, text)

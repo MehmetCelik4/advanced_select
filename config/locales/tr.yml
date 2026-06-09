@@ -6,3 +6,4 @@ tr:
       error: "Seçenekler yüklenemedi"
       loading: "Yükleniyor..."
       search_placeholder: "Ara..."
+      selected_count: "%{count} seçili"
