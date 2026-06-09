@@ -83,6 +83,63 @@
   option_content_partial: "advanced_select/option_contents/product"
 ) %>
 
+<%= advanced_select_tag(
+  "example[count_ids][]",
+  id: "example_count_ids",
+  selected: [
+    { id: "multi-1", label: "Multi One" },
+    { id: "multi-2", label: "Multi Two" },
+    { id: "multi-3", label: "Multi Three" }
+  ],
+  options: [
+    { id: "multi-1", label: "Multi One" },
+    { id: "multi-2", label: "Multi Two" },
+    { id: "multi-3", label: "Multi Three" }
+  ],
+  placeholder: "Choose count summary items",
+  multiple: true,
+  searchable: false,
+  summary_mode: :count
+) %>
+
+<%= advanced_select_tag(
+  "example[tooltip_ids][]",
+  id: "example_tooltip_ids",
+  selected: [
+    { id: "multi-1", label: "Multi One" },
+    { id: "multi-2", label: "Multi Two" }
+  ],
+  options: [
+    { id: "multi-1", label: "Multi One" },
+    { id: "multi-2", label: "Multi Two" },
+    { id: "multi-3", label: "Multi Three" }
+  ],
+  placeholder: "Choose tooltip items",
+  multiple: true,
+  searchable: false,
+  summary_mode: :count,
+  tooltip: true
+) %>
+
+<%= advanced_select_tag(
+  "example[tooltip_partial_ids][]",
+  id: "example_tooltip_partial_ids",
+  selected: [
+    { id: "alt-1", value: "Muadil", label: "ALT-001 – Antikor A" },
+    { id: "alt-2", value: "Benzer", label: "ALT-002 – Antikor B" }
+  ],
+  options: [
+    { id: "alt-1", value: "Muadil", label: "ALT-001 – Antikor A" },
+    { id: "alt-2", value: "Benzer", label: "ALT-002 – Antikor B" },
+    { id: "alt-3", value: "Eşdeğer", label: "ALT-003 – Antikor C" }
+  ],
+  placeholder: "Choose alternatives",
+  multiple: true,
+  searchable: false,
+  summary_mode: :count,
+  tooltip_partial: "advanced_select/tooltips/alternatives"
+) %>
+
 <label for="example_dependency">Dependency</label>
 <select id="example_dependency" name="example[dependency]">
   <option value="north">North</option>

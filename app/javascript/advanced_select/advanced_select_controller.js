@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { Turbo } from "@hotwired/turbo-rails"
 
 export default class extends Controller {
-  static targets = ["hiddenFields", "trigger", "summary", "dropdown", "search", "options", "caret", "clear"]
+  static targets = ["hiddenFields", "trigger", "summary", "dropdown", "search", "options", "caret", "clear", "tooltip"]
   static values = {
     addMode: Boolean,
     autoSelectSingle: { type: Boolean, default: true },
@@ -19,6 +19,8 @@ export default class extends Controller {
     placeholder: String,
     searchable: Boolean,
     selected: Array,
+    selectedCountText: String,
+    summaryMode: { type: String, default: "tokens" },
     targetId: String,
     url: String
   }
@@ -30,6 +32,7 @@ export default class extends Controller {
     this.placeholderClass = this.element.dataset.advancedSelectPlaceholderClass || "ui-advanced-select-placeholder"
     this.valueClass = this.element.dataset.advancedSelectValueClass || "ui-advanced-select-value"
     this.tokenClass = this.element.dataset.advancedSelectTokenClass || "ui-advanced-select-token"
+    this.tooltipItemClass = this.element.dataset.advancedSelectTooltipItemClass || "ui-advanced-select-tooltip-item"
     this.loadingClass = this.element.dataset.advancedSelectLoadingClass || "ui-advanced-select-loading"
     this.errorClass = this.element.dataset.advancedSelectErrorClass || "ui-advanced-select-error"
     this.emptyClass = this.element.dataset.advancedSelectEmptyClass || "ui-advanced-select-empty"
@@ -48,6 +51,7 @@ export default class extends Controller {
 
   disconnect() {
     window.clearTimeout(this.timer)
+    window.clearTimeout(this.tooltipHideTimer)
     document.removeEventListener("click", this.close)
 
     if (this.dependentChangeListener) {
@@ -66,6 +70,7 @@ export default class extends Controller {
   }
 
   open() {
+    this.hideTooltip(true)
     this.dropdownTarget.classList.remove("hidden")
     this.triggerTarget.setAttribute("aria-expanded", "true")
     document.addEventListener("click", this.close)
@@ -302,6 +307,7 @@ export default class extends Controller {
   renderSelection() {
     this.hiddenFieldsTarget.replaceChildren(...this.hiddenFieldElements)
     this.summaryTarget.replaceChildren(...this.selectionElements)
+    this.renderTooltip()
     this.renderOptionsState()
     this.caretTarget.classList.toggle("hidden", this.selectedValue.length > 0)
     this.clearTarget.classList.toggle("hidden", this.selectedValue.length === 0)
@@ -471,6 +477,10 @@ export default class extends Controller {
       return [this.textElement("span", this.valueClass, this.displayLabel(this.selectedValue[0]))]
     }
 
+    if (this.summaryModeValue === "count") {
+      return [this.textElement("span", this.valueClass, this.selectedCountLabel(this.selectedValue.length))]
+    }
+
     const tokens = this.selectedValue.slice(0, 2).map((option) => this.textElement("span", this.tokenClass, this.displayLabel(option)))
 
     if (this.selectedValue.length > 2) {
@@ -480,8 +490,58 @@ export default class extends Controller {
     return tokens
   }
 
+  selectedCountLabel(count) {
+    return (this.selectedCountTextValue || "%{count}").replace("%{count}", count)
+  }
+
   displayLabel(option) {
     return option.displayLabel || option.label
+  }
+
+  showTooltip() {
+    if (!this.hasTooltipTarget || this.expanded || this.selectedValue.length === 0) {
+      return
+    }
+
+    window.clearTimeout(this.tooltipHideTimer)
+    this.tooltipTarget.classList.remove("hidden")
+  }
+
+  hideTooltip(immediate = false) {
+    if (!this.hasTooltipTarget) {
+      return
+    }
+
+    window.clearTimeout(this.tooltipHideTimer)
+
+    if (immediate === true) {
+      this.tooltipTarget.classList.add("hidden")
+    } else {
+      this.tooltipHideTimer = window.setTimeout(() => this.tooltipTarget.classList.add("hidden"), 150)
+    }
+  }
+
+  keepTooltip() {
+    window.clearTimeout(this.tooltipHideTimer)
+  }
+
+  renderTooltip() {
+    if (!this.hasTooltipTarget || this.tooltipTarget.hasAttribute("data-advanced-select-tooltip-custom")) {
+      return
+    }
+
+    const list = this.tooltipTarget.querySelector("[data-advanced-select-tooltip-list]")
+    if (!list) {
+      return
+    }
+
+    list.replaceChildren(
+      ...this.selectedValue.map((option) => this.textElement("li", this.tooltipItemClass, this.displayLabel(option)))
+    )
+
+    if (this.selectedValue.length === 0) {
+      this.hideTooltip(true)
+    }
   }
 
   textElement(tagName, className, text) {

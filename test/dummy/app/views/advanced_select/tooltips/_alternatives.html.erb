@@ -1,0 +1,16 @@
+<table class="advanced-select-tooltip-table">
+  <thead>
+    <tr>
+      <th>Code &amp; Name</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% selected_options.each do |option| %>
+      <tr>
+        <td><%= option.fetch(:display_label) %></td>
+        <td><%= option.fetch(:value) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

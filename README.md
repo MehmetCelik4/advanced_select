@@ -16,6 +16,8 @@ AdvancedSelect is a small Rails engine for rendering an advanced select input wi
 - [Basic Local Select](#basic-local-select)
 - [Remote Search](#remote-search)
 - [Multiple Select](#multiple-select)
+- [Count Summary](#count-summary)
+- [Selection Tooltip](#selection-tooltip)
 - [Add Mode](#add-mode)
 - [Dependent Fields](#dependent-fields)
 - [Custom Option Content](#custom-option-content)
@@ -428,6 +430,79 @@ Pass `include_hidden: false` to opt out — for example, when your controller re
 ) %>
 ```
 
+### Count Summary
+
+By default a multiple select collapses its trigger to the first two selected labels plus an `& +N` token. For long selections — or when the detail belongs in a [tooltip](#selection-tooltip) — pass `summary_mode: :count` to render a single `"N selected"` label instead:
+
+```erb
+<%= advanced_select_tag(
+  "record[item_ids][]",
+  id: "record_item_ids",
+  selected: selected_options,
+  options: options,
+  placeholder: t(".items_placeholder"),
+  multiple: true,
+  summary_mode: :count
+) %>
+```
+
+The label text comes from the `shared.advanced_select.selected_count` translation (`"%{count} selected"`), so override it per locale to localize or reword it. `summary_mode` only affects multiple selects; single selects always show the selected label.
+
+### Selection Tooltip
+
+Multiple selects can show an optional tooltip when the user hovers the trigger — handy together with `summary_mode: :count`, where the trigger only shows a count and the tooltip reveals the detail. The tooltip is hover-driven (no info icon) and is positioned with CSS below the trigger.
+
+Pass `tooltip: true` for a built-in list of the selected display labels:
+
+```erb
+<%= advanced_select_tag(
+  "record[item_ids][]",
+  id: "record_item_ids",
+  selected: selected_options,
+  options: options,
+  placeholder: t(".items_placeholder"),
+  multiple: true,
+  summary_mode: :count,
+  tooltip: true
+) %>
+```
+
+The built-in list stays in sync as the selection changes on the client.
+
+For richer layouts — a table, badges, compatibility columns, etc. — pass `tooltip_partial:` instead. The partial receives `selected_options` and `options` as locals and may render any markup:
+
+```erb
+<%= advanced_select_tag(
+  "record[alternative_ids][]",
+  id: "record_alternative_ids",
+  selected: selected_options,
+  options: options,
+  placeholder: t(".alternatives_placeholder"),
+  multiple: true,
+  summary_mode: :count,
+  tooltip_partial: "alternatives/tooltip"
+) %>
+```
+
+```erb
+<%# app/views/alternatives/_tooltip.html.erb %>
+<table>
+  <thead>
+    <tr><th>Code &amp; Name</th><th>Type</th></tr>
+  </thead>
+  <tbody>
+    <% selected_options.each do |option| %>
+      <tr>
+        <td><%= option.fetch(:display_label) %></td>
+        <td><%= option.fetch(:value) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+```
+
+A custom `tooltip_partial` is rendered once on the server, so it is best for display-oriented content. If your selection changes on the client and the custom tooltip must reflect it live, re-render the field (for example via a Turbo Stream) after the change. The built-in `tooltip: true` list updates client-side automatically.
+
 ### Add Mode
 
 Set `add_mode: true` when users may submit a new typed value:
@@ -675,11 +750,18 @@ advanced_select_tag(
   include_hidden: true,
   auto_select_single: true,
   eager: true,
+  summary_mode: :tokens,
+  tooltip: false,
+  tooltip_partial: nil,
   option_content_partial: nil,
   classes: {},
   append_classes: {}
 )
 ```
+
+`summary_mode:` controls how a multiple select renders its collapsed trigger label. The default `:tokens` shows the first two selected display labels followed by `& +N`. Pass `:count` to render a single localized `"N selected"` summary instead (see [Count Summary](#count-summary)).
+
+`tooltip:` / `tooltip_partial:` enable an optional hover tooltip on the trigger (see [Selection Tooltip](#selection-tooltip)).
 
 `advanced_select_options_tag`:
 
@@ -738,7 +820,11 @@ shared:
     empty: "No options found"
     error: "Options could not be loaded"
     loading: "Loading..."
+    search_placeholder: "Search..."
+    selected_count: "%{count} selected"
 ```
+
+`selected_count` is used by the [count summary](#count-summary) (`summary_mode: :count`).
 
 Override these keys in the host app as needed.
 
@@ -851,6 +937,7 @@ Common styling hooks:
 
 - `.ui-advanced-select-trigger` controls the visible input button, border, radius, height, background, and focus outline.
 - `.ui-advanced-select-dropdown` controls the popup container, border, radius, shadow, width, and `z-index`.
+- `.ui-advanced-select-tooltip`, `.ui-advanced-select-tooltip-list`, and `.ui-advanced-select-tooltip-item` control the optional [selection tooltip](#selection-tooltip) container and its built-in list. The tooltip is positioned with CSS (`position: absolute` below the trigger); adjust `top`, `min-width`, or `z-index` here if your layout needs it.
 - `.ui-advanced-select-options` controls the scroll container and default `max-height`.
 - `.ui-advanced-select-option` controls option row spacing, hover state, and font sizing.
 - `.ui-advanced-select-option[aria-selected="true"]` controls selected option colors.

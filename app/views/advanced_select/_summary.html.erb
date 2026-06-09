@@ -1,10 +1,15 @@
+<% summary_mode = local_assigns.fetch(:summary_mode, :tokens) %>
 <% if selected_options.any? %>
   <% if multiple %>
-    <% selected_options.first(2).each do |option| %>
-      <span class="<%= advanced_select_class(class_map, :token) %>"><%= option.fetch(:display_label) %></span>
-    <% end %>
-    <% if selected_options.size > 2 %>
-      <span class="<%= advanced_select_class(class_map, :token) %>"><%= "& +#{selected_options.size - 2}" %></span>
+    <% if summary_mode.to_s == "count" %>
+      <span class="<%= advanced_select_class(class_map, :value) %>"><%= t("shared.advanced_select.selected_count", count: selected_options.size) %></span>
+    <% else %>
+      <% selected_options.first(2).each do |option| %>
+        <span class="<%= advanced_select_class(class_map, :token) %>"><%= option.fetch(:display_label) %></span>
+      <% end %>
+      <% if selected_options.size > 2 %>
+        <span class="<%= advanced_select_class(class_map, :token) %>"><%= "& +#{selected_options.size - 2}" %></span>
+      <% end %>
     <% end %>
   <% else %>
     <span class="<%= advanced_select_class(class_map, :value) %>"><%= selected_options.first.fetch(:display_label) %></span>
