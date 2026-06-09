@@ -96,7 +96,87 @@
   options: [],
   placeholder: "Search dependent item",
   options_url: advanced_select_example_options_path,
-  dependent_fields: { region: "#example_dependency" }
+  dependent_fields: { region: "#example_dependency" },
+  auto_select_single: false
+) %>
+
+<%= advanced_select_tag(
+  "example[auto_local_id]",
+  id: "example_auto_local_id",
+  selected: nil,
+  options: [
+    { id: "only-1", label: "Only Choice" }
+  ],
+  placeholder: "Choose auto local item",
+  searchable: false
+) %>
+
+<%= advanced_select_tag(
+  "example[auto_remote_id]",
+  id: "example_auto_remote_id",
+  selected: nil,
+  options: [],
+  placeholder: "Search auto remote item",
+  options_url: advanced_select_example_options_path
+) %>
+
+<%= advanced_select_tag(
+  "example[auto_remote_off_id]",
+  id: "example_auto_remote_off_id",
+  selected: nil,
+  options: [],
+  placeholder: "Search auto remote off item",
+  options_url: advanced_select_example_options_path,
+  auto_select_single: false
+) %>
+
+<label for="example_eager_dependency">Eager Dependency</label>
+<select id="example_eager_dependency" name="example[eager_dependency]">
+  <option value="north">North</option>
+  <option value="south">South</option>
+</select>
+
+<%= advanced_select_tag(
+  "example[eager_dependent_id]",
+  id: "example_eager_dependent_id",
+  selected: nil,
+  options: [],
+  placeholder: "Eager dependent item",
+  options_url: advanced_select_example_options_path,
+  dependent_fields: { region: "#example_eager_dependency" }
+) %>
+
+<%= advanced_select_tag(
+  "example[lazy_dependent_id]",
+  id: "example_lazy_dependent_id",
+  selected: nil,
+  options: [],
+  placeholder: "Lazy dependent item",
+  options_url: advanced_select_example_options_path,
+  dependent_fields: { region: "#example_eager_dependency" },
+  eager: false
+) %>
+
+<%= advanced_select_tag(
+  "example[chain_parent]",
+  id: "example_chain_parent",
+  selected: nil,
+  options: [
+    { id: "north", label: "North" },
+    { id: "south", label: "South" }
+  ],
+  placeholder: "Choose chain parent",
+  searchable: false
+) %>
+
+<%= advanced_select_tag(
+  "example[chain_dependent_id]",
+  id: "example_chain_dependent_id",
+  selected: nil,
+  options: [],
+  placeholder: "Chain dependent item",
+  options_url: advanced_select_example_options_path,
+  dependent_fields: { region: "#example_chain_parent" }
 ) %>
 
 <%= advanced_select_tag(

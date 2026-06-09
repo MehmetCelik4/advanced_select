@@ -167,6 +167,63 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_selector "#example_dependent_id_options button", text: "Dependent South"
   end
 
+  test "eagerly loads and auto-selects dependent options without opening" do
+    visit root_path
+
+    assert_selector "#example_eager_dependent_id_summary", text: "Dependent North"
+    assert_selector "input[name='example[eager_dependent_id]'][value='dependent-north']", visible: false
+
+    select "South", from: "example_eager_dependency"
+
+    assert_selector "#example_eager_dependent_id_summary", text: "Dependent South"
+    assert_selector "input[name='example[eager_dependent_id]'][value='dependent-south']", visible: false
+  end
+
+  test "does not eagerly load dependent options when eager is disabled" do
+    visit root_path
+
+    select "South", from: "example_eager_dependency"
+
+    assert_selector "#example_lazy_dependent_id_summary", text: "Lazy dependent item"
+    assert_empty find("input[name='example[lazy_dependent_id]']", visible: false).value
+  end
+
+  test "propagates an advanced select selection to eager dependent options" do
+    visit root_path
+
+    find("#example_chain_parent_trigger").click
+    find("#example_chain_parent_options button", text: "South").click
+
+    assert_selector "#example_chain_dependent_id_summary", text: "Dependent South"
+    assert_selector "input[name='example[chain_dependent_id]'][value='dependent-south']", visible: false
+  end
+
+  test "does not auto-select a single statically rendered local option" do
+    visit root_path
+
+    assert_selector "#example_auto_local_id_summary", text: "Choose auto local item"
+    assert_empty find("input[name='example[auto_local_id]']", visible: false).value
+  end
+
+  test "auto-selects the only remote option after opening" do
+    visit root_path
+
+    find("#example_auto_remote_id_trigger").click
+
+    assert_selector "input[name='example[auto_remote_id]'][value='remote-only']", visible: false
+    assert_selector "#example_auto_remote_id_summary", text: "Remote Only"
+  end
+
+  test "keeps the placeholder when auto select single is disabled" do
+    visit root_path
+
+    find("#example_auto_remote_off_id_trigger").click
+
+    assert_selector "#example_auto_remote_off_id_options button", text: "Remote Only"
+    assert_selector "#example_auto_remote_off_id_summary", text: "Search auto remote off item"
+    assert_empty find("input[name='example[auto_remote_off_id]']", visible: false).value
+  end
+
   test "renders remote error state when option loading fails" do
     visit root_path
 

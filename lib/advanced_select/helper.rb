@@ -1,6 +1,6 @@
 module AdvancedSelect
   module Helper
-    def advanced_select_tag(name, id:, selected:, options:, placeholder:, options_url: nil, multiple: false, searchable: true, add_mode: false, dependent_fields: {}, include_hidden: true, option_content_partial: nil, classes: {}, append_classes: {})
+    def advanced_select_tag(name, id:, selected:, options:, placeholder:, options_url: nil, multiple: false, searchable: true, add_mode: false, dependent_fields: {}, include_hidden: true, auto_select_single: true, eager: true, option_content_partial: nil, classes: {}, append_classes: {})
       selected_options = advanced_select_selected_options(selected)
       class_map = advanced_select_class_map(classes, append_classes)
 
@@ -16,6 +16,8 @@ module AdvancedSelect
         add_mode: add_mode,
         dependent_fields: dependent_fields,
         include_hidden: include_hidden,
+        auto_select_single: auto_select_single,
+        eager: eager,
         target_id: "#{id}_options",
         option_content_partial: option_content_partial,
         class_map: class_map

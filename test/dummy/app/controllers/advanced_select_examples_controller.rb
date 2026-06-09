@@ -44,12 +44,21 @@ class AdvancedSelectExamplesController < ApplicationController
   end
 
   def options_for_target
-    return dependent_options if @target_id == "example_dependent_id_options"
+    return dependent_options if @target_id.end_with?("dependent_id_options")
+    return single_remote_option if @target_id.start_with?("example_auto_remote")
 
     remote_options
   end
 
+  def single_remote_option
+    [
+      { id: "remote-only", label: "Remote Only" }
+    ]
+  end
+
   def dependent_options
+    return [] if params[:region].blank?
+
     [
       { id: "dependent-#{params[:region]}", label: "Dependent #{params[:region].to_s.titleize}" }
     ]

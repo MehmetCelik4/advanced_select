@@ -114,6 +114,62 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_selector fragment, "#report_local_item_options button[data-advanced-select-value-param='item-1']", text: "Item one"
   end
 
+  test "enables auto select single by default and allows disabling it" do
+    enabled = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_auto_single",
+        selected: nil,
+        options: [{ id: "item-1", label: "Item one" }],
+        placeholder: "Select"
+      )
+    )
+
+    disabled = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_auto_single_off",
+        selected: nil,
+        options: [{ id: "item-1", label: "Item one" }],
+        placeholder: "Select",
+        auto_select_single: false
+      )
+    )
+
+    assert_equal "true", enabled.at_css(".ui-advanced-select")["data-advanced-select-auto-select-single-value"]
+    assert_equal "false", disabled.at_css(".ui-advanced-select")["data-advanced-select-auto-select-single-value"]
+  end
+
+  test "enables eager dependent loading by default and allows disabling it" do
+    enabled = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_eager",
+        selected: nil,
+        options: [],
+        placeholder: "Select",
+        options_url: "/report/options",
+        dependent_fields: { region: "#report_region" }
+      )
+    )
+
+    disabled = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_eager_off",
+        selected: nil,
+        options: [],
+        placeholder: "Select",
+        options_url: "/report/options",
+        dependent_fields: { region: "#report_region" },
+        eager: false
+      )
+    )
+
+    assert_equal "true", enabled.at_css(".ui-advanced-select")["data-advanced-select-eager-value"]
+    assert_equal "false", disabled.at_css(".ui-advanced-select")["data-advanced-select-eager-value"]
+  end
+
   test "renders public styling hooks" do
     fragment = html_fragment(
       advanced_select_tag(
