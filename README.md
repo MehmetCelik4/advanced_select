@@ -75,7 +75,7 @@ AdvancedSelect does not provide query objects, model concerns, authorization log
 Add the gem to the host Rails app:
 
 ```ruby
-gem "advanced_select", "~> 0.1.0"
+gem "advanced_select", "~> 0.1.4"
 ```
 
 Run the installer:
@@ -502,6 +502,48 @@ Use `dependent_fields` when a remote option endpoint depends on another field va
 
 The remote request will include `parent_id=<current field value>`.
 
+By default the field is **eager**: it listens for `change` on each dependent field and reloads its options immediately, without waiting for the dropdown to open. When a parent changes, the field clears its current value, fetches fresh options for the new parent, and (combined with auto select, below) can settle on a value while staying closed. It also loads once on initial render so a parent's default value is reflected right away. An existing server-rendered selection is left untouched.
+
+Because the field re-broadcasts a `change` event whenever its own value changes, you can chain advanced selects: a child can depend on another advanced select via its hidden input id (`dependent_fields: { parent_id: "#record_parent_id" }`).
+
+Pass `eager: false` for the lazy behaviour instead — options are only fetched when the dropdown opens, and the field does not react to parent changes until then:
+
+```erb
+<%= advanced_select_tag(
+  "record[item_id]",
+  id: "record_item_id",
+  selected: selected_option,
+  options: [],
+  placeholder: t(".item_placeholder"),
+  options_url: item_options_path,
+  dependent_fields: { parent_id: "#record_parent_id" },
+  eager: false
+) %>
+```
+
+### Auto Select Single Option
+
+When a remote option list is populated and resolves to exactly one selectable option, the field selects that option automatically. This is enabled by default and is meant for dependent fields where a parent value narrows the children down to a single valid choice.
+
+Auto selection only runs when the dropdown is **populated through a remote request** (the cascade case): it fires after the options finish loading, either when the dropdown opens or — with the default eager dependent fields above — as soon as a parent value loads them, so a single valid option is selected without the user opening the field. It does **not** run for statically rendered local options on page load, and it never triggers while the user is actively typing a search.
+
+It never overrides an existing selection and is skipped for `multiple` fields.
+
+Pass `auto_select_single: false` to opt out:
+
+```erb
+<%= advanced_select_tag(
+  "record[item_id]",
+  id: "record_item_id",
+  selected: selected_option,
+  options: [],
+  placeholder: t(".item_placeholder"),
+  options_url: item_options_path,
+  dependent_fields: { parent_id: "#record_parent_id" },
+  auto_select_single: false
+) %>
+```
+
 ### Custom Option Content
 
 Use a custom option content partial when an option needs richer content. The engine still renders the option button, Stimulus data attributes, and ARIA attributes:
@@ -631,6 +673,8 @@ advanced_select_tag(
   add_mode: false,
   dependent_fields: {},
   include_hidden: true,
+  auto_select_single: true,
+  eager: true,
   option_content_partial: nil,
   classes: {},
   append_classes: {}
