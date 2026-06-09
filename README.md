@@ -77,7 +77,7 @@ AdvancedSelect does not provide query objects, model concerns, authorization log
 Add the gem to the host Rails app:
 
 ```ruby
-gem "advanced_select", "~> 0.1.4"
+gem "advanced_select", "~> 0.1.5"
 ```
 
 Run the installer:
