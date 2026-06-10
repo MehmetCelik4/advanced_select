@@ -116,8 +116,10 @@ module AdvancedSelect
       tag.span(safe_join(content), class: advanced_select_class(class_map, :option_content))
     end
 
-    def advanced_select_options_for_render(options, selected_options, searchable)
-      searchable ? selected_options.presence || options : options
+    def advanced_select_options_for_render(options, selected_options, searchable, options_url)
+      return options unless searchable
+
+      options_url.present? ? selected_options.presence || options : options
     end
 
     def advanced_select_add_option?(options, selected_options, add_mode, query)
