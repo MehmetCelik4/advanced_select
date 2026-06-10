@@ -304,6 +304,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
       assert_selector "table.advanced-select-tooltip-table"
       assert_text "ALT-001 – Antikor A"
       assert_text "Muadil"
+      assert_text "CD19"
     end
   end
 
@@ -322,6 +323,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
       assert_text "ALT-001 – Antikor A"
       assert_text "ALT-003 – Antikor C"
       assert_text "Eşdeğer"
+      assert_text "HER2"
     end
 
     find("#example_tooltip_partial_ids_trigger").click
@@ -334,6 +336,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     within "#example_tooltip_partial_ids_tooltip" do
       assert_no_text "ALT-001 – Antikor A"
       assert_text "ALT-003 – Antikor C"
+      assert_text "HER2"
     end
   end
 

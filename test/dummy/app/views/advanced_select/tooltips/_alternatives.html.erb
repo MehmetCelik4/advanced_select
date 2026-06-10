@@ -3,6 +3,7 @@
     <tr>
       <th>Code &amp; Name</th>
       <th>Type</th>
+      <th>Test</th>
     </tr>
   </thead>
   <tbody data-advanced-select-tooltip-list>
@@ -10,6 +11,7 @@
       <tr>
         <td><%= option.fetch(:display_label) %></td>
         <td><%= option.fetch(:value) %></td>
+        <td><%= option.dig(:test, :name) %></td>
       </tr>
     <% end %>
   </tbody>
@@ -17,6 +19,7 @@
     <tr>
       <td data-advanced-select-tooltip-field="display_label"></td>
       <td data-advanced-select-tooltip-field="value"></td>
+      <td data-advanced-select-tooltip-field="test.name"></td>
     </tr>
   </template>
 </table>

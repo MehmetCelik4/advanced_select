@@ -476,7 +476,7 @@ class AdvancedSelectHelperTest < ActionView::TestCase
         "report[item]",
         id: "report_custom_item",
         selected: nil,
-        options: [{ id: "product-1", code: "P-001", label: "Product one" }],
+        options: [{ id: "product-1", code: "P-001", label: "Product one", test: { name: "CD19" } }],
         placeholder: "Select",
         searchable: false,
         option_content_partial: "advanced_select/option_contents/product"
@@ -485,6 +485,10 @@ class AdvancedSelectHelperTest < ActionView::TestCase
 
     assert_selector fragment, "#report_custom_item_options button[role='option'][data-advanced-select-value-param='product-1']"
     assert_selector fragment, "#report_custom_item_options .custom-product-code", text: "P-001"
+
+    payload = JSON.parse(fragment.at_css("#report_custom_item_options button")["data-advanced-select-option-param"])
+    assert_equal "P-001", payload.fetch("code")
+    assert_equal "CD19", payload.fetch("test").fetch("name")
   end
 
   test "renders options only content for turbo stream replacement" do

@@ -39,11 +39,7 @@ export default class extends Controller {
     this.optionActiveClasses = this.classList(this.element.dataset.advancedSelectOptionActiveClass || "ui-advanced-select-option-active")
     this.addOptionActiveClasses = this.classList(this.element.dataset.advancedSelectAddOptionActiveClass || "")
     this.optionSelectedClasses = this.classList(this.element.dataset.advancedSelectOptionSelectedClass || "")
-    this.selectedValue = this.selectedValue.map((option) => ({
-      ...option,
-      id: option.id.toString(),
-      displayLabel: option.displayLabel || option.label
-    }))
+    this.selectedValue = this.selectedValue.map((option) => this.normalizeSelectedOption(option))
     this.close = this.close.bind(this)
     this.renderOptionsState()
     this.setupEagerDependentFields()
@@ -109,7 +105,7 @@ export default class extends Controller {
 
   choose(event) {
     event.preventDefault()
-    this.selectOption(event.params.value, event.params.label, event.params.submitValue, { displayLabel: event.params.displayLabel })
+    this.selectOptionFromElement(event.currentTarget)
   }
 
   add(event) {
@@ -281,17 +277,28 @@ export default class extends Controller {
   }
 
   selectOption(value, label, submitValue = value, { displayLabel = label, refreshOptions = this.multipleValue } = {}) {
-    value = value.toString()
-    submitValue = submitValue.toString()
+    this.selectOptionData(
+      this.normalizeSelectedOption({ id: value, value: submitValue, label, displayLabel }),
+      { refreshOptions }
+    )
+  }
+
+  selectOptionFromElement(element, { refreshOptions = this.multipleValue } = {}) {
+    this.selectOptionData(this.optionData(element), { refreshOptions })
+  }
+
+  selectOptionData(option, { refreshOptions = this.multipleValue } = {}) {
+    const selectedOption = this.normalizeSelectedOption(option)
+    const value = selectedOption.id
 
     if (this.multipleValue) {
       if (this.selectedValue.some((option) => option.id === value)) {
         this.selectedValue = this.selectedValue.filter((option) => option.id !== value)
       } else {
-        this.selectedValue = [{ id: value, value: submitValue, label, displayLabel }, ...this.selectedValue]
+        this.selectedValue = [selectedOption, ...this.selectedValue]
       }
     } else {
-      this.selectedValue = [{ id: value, value: submitValue, label, displayLabel }]
+      this.selectedValue = [selectedOption]
     }
 
     this.renderSelection()
@@ -301,6 +308,51 @@ export default class extends Controller {
 
     if (!this.multipleValue) {
       this.close()
+    }
+  }
+
+  optionData(element) {
+    const data = this.parseOptionData(element.dataset.advancedSelectOptionParam)
+    const value = element.dataset.advancedSelectValueParam
+    const submitValue = element.dataset.advancedSelectSubmitValueParam || value
+    const label = element.dataset.advancedSelectLabelParam
+    const displayLabel = element.dataset.advancedSelectDisplayLabelParam || label
+
+    return {
+      ...data,
+      id: value,
+      value: submitValue,
+      label,
+      displayLabel
+    }
+  }
+
+  parseOptionData(json) {
+    if (!json) {
+      return {}
+    }
+
+    try {
+      const data = JSON.parse(json)
+      return data && typeof data === "object" && !Array.isArray(data) ? data : {}
+    } catch (_error) {
+      return {}
+    }
+  }
+
+  normalizeSelectedOption(option) {
+    const id = option.id.toString()
+    const value = (option.value || id).toString()
+    const label = (option.label || option.displayLabel || option.display_label || value).toString()
+    const displayLabel = (option.displayLabel || option.display_label || label).toString()
+
+    return {
+      ...option,
+      id,
+      value,
+      label,
+      displayLabel,
+      display_label: displayLabel
     }
   }
 
@@ -383,13 +435,7 @@ export default class extends Controller {
       return
     }
 
-    const option = options[0]
-    this.selectOption(
-      option.dataset.advancedSelectValueParam,
-      option.dataset.advancedSelectLabelParam,
-      option.dataset.advancedSelectSubmitValueParam || option.dataset.advancedSelectValueParam,
-      { displayLabel: option.dataset.advancedSelectDisplayLabelParam, refreshOptions: false }
-    )
+    this.selectOptionFromElement(options[0], { refreshOptions: false })
   }
 
   chooseActiveOption() {
@@ -401,12 +447,7 @@ export default class extends Controller {
         this.activeOption.dataset.advancedSelectDisplayLabelParam
       )
     } else {
-      this.selectOption(
-        this.activeOption.dataset.advancedSelectValueParam,
-        this.activeOption.dataset.advancedSelectLabelParam,
-        this.activeOption.dataset.advancedSelectSubmitValueParam || this.activeOption.dataset.advancedSelectValueParam,
-        { displayLabel: this.activeOption.dataset.advancedSelectDisplayLabelParam }
-      )
+      this.selectOptionFromElement(this.activeOption)
     }
   }
 
@@ -602,9 +643,27 @@ export default class extends Controller {
       return this.displayLabel(option)
     }
 
-    const camelizedField = field.replace(/_([a-z])/g, (_match, character) => character.toUpperCase())
-    const value = option[field] ?? option[camelizedField]
+    const value = this.optionFieldValue(option, field)
     return value === undefined || value === null ? "" : value.toString()
+  }
+
+  optionFieldValue(option, field) {
+    const directValue = option[field] ?? option[this.camelize(field)]
+    if (directValue !== undefined) {
+      return directValue
+    }
+
+    return field.split(".").reduce((value, segment) => {
+      if (value === undefined || value === null) {
+        return undefined
+      }
+
+      return value[segment] ?? value[this.camelize(segment)]
+    }, option)
+  }
+
+  camelize(value) {
+    return value.replace(/_([a-z])/g, (_match, character) => character.toUpperCase())
   }
 
   textElement(tagName, className, text) {
