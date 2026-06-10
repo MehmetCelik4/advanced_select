@@ -114,6 +114,25 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     assert_selector fragment, "#report_local_item_options button[data-advanced-select-value-param='item-1']", text: "Item one"
   end
 
+  test "renders all local searchable options when one is selected" do
+    fragment = html_fragment(
+      advanced_select_tag(
+        "report[item]",
+        id: "report_local_selected_item",
+        selected: { id: "item-2", label: "Item two" },
+        options: [
+          { id: "item-1", label: "Item one" },
+          { id: "item-2", label: "Item two" }
+        ],
+        placeholder: "Select"
+      )
+    )
+
+    assert_equal 2, fragment.css("#report_local_selected_item_options button").size
+    assert_selector fragment, "#report_local_selected_item_options button[data-advanced-select-value-param='item-1']", text: "Item one"
+    assert_selector fragment, "#report_local_selected_item_options button[data-advanced-select-value-param='item-2'][aria-selected='true']", text: "Item two"
+  end
+
   test "enables auto select single by default and allows disabling it" do
     enabled = html_fragment(
       advanced_select_tag(

@@ -95,7 +95,7 @@
     <%= render partial: "advanced_select/options", locals: {
       target_id: target_id,
       selected_options: selected_options,
-      options: advanced_select_options_for_render(options, selected_options, searchable),
+      options: advanced_select_options_for_render(options, selected_options, searchable, options_url),
       multiple: multiple,
       add_mode: add_mode,
       query: nil,
