@@ -410,7 +410,9 @@ class AdvancedSelectHelperTest < ActionView::TestCase
     )
 
     assert_selector fragment, "#report_items_tooltip[data-advanced-select-tooltip-custom]"
-    assert_no_selector fragment, "#report_items_tooltip [data-advanced-select-tooltip-list]"
+    assert_selector fragment, "#report_items_tooltip table.advanced-select-tooltip-table"
+    assert_selector fragment, "#report_items_tooltip template[data-advanced-select-tooltip-template]"
+    assert_no_selector fragment, "#report_items_tooltip ul"
   end
 
   test "omits the tooltip element when tooltip is disabled" do

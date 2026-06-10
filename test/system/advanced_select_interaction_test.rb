@@ -307,6 +307,36 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     end
   end
 
+  test "rebuilds the custom tooltip partial as the selection changes" do
+    visit root_path
+
+    find("#example_tooltip_partial_ids_trigger").click
+    find("#example_tooltip_partial_ids_options button", text: "ALT-003 – Antikor C").click
+    find("#example_tooltip_partial_ids_trigger").click
+
+    # Hover a different trigger first so re-hovering fires a fresh mouseenter.
+    find("#example_item_id_trigger").hover
+    find("#example_tooltip_partial_ids_trigger").hover
+
+    within "#example_tooltip_partial_ids_tooltip" do
+      assert_text "ALT-001 – Antikor A"
+      assert_text "ALT-003 – Antikor C"
+      assert_text "Eşdeğer"
+    end
+
+    find("#example_tooltip_partial_ids_trigger").click
+    find("#example_tooltip_partial_ids_options button", text: "ALT-001 – Antikor A").click
+    find("#example_tooltip_partial_ids_trigger").click
+
+    find("#example_item_id_trigger").hover
+    find("#example_tooltip_partial_ids_trigger").hover
+
+    within "#example_tooltip_partial_ids_tooltip" do
+      assert_no_text "ALT-001 – Antikor A"
+      assert_text "ALT-003 – Antikor C"
+    end
+  end
+
   private
 
   def assert_selected_option_check(select_id, text)

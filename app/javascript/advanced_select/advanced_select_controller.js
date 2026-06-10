@@ -526,10 +526,19 @@ export default class extends Controller {
   }
 
   renderTooltip() {
-    if (!this.hasTooltipTarget || this.tooltipTarget.hasAttribute("data-advanced-select-tooltip-custom")) {
+    if (!this.hasTooltipTarget) {
       return
     }
 
+    if (this.tooltipTarget.hasAttribute("data-advanced-select-tooltip-custom")) {
+      this.renderCustomTooltip()
+      return
+    }
+
+    this.renderBuiltInTooltip()
+  }
+
+  renderBuiltInTooltip() {
     const list = this.tooltipTarget.querySelector("[data-advanced-select-tooltip-list]")
     if (!list) {
       return
@@ -542,6 +551,60 @@ export default class extends Controller {
     if (this.selectedValue.length === 0) {
       this.hideTooltip(true)
     }
+  }
+
+  renderCustomTooltip() {
+    const list = this.tooltipTarget.querySelector("[data-advanced-select-tooltip-list]")
+    const template = this.customTooltipTemplate()
+
+    if (!list || !template) {
+      if (this.selectedValue.length === 0) {
+        this.hideTooltip(true)
+      }
+      return
+    }
+
+    list.replaceChildren(
+      ...this.selectedValue.map((option) => this.customTooltipElement(template, option))
+    )
+
+    if (this.selectedValue.length === 0) {
+      this.hideTooltip(true)
+    }
+  }
+
+  customTooltipTemplate() {
+    if (this.customTooltipTemplateContent) {
+      return this.customTooltipTemplateContent
+    }
+
+    const template = this.tooltipTarget.querySelector("template[data-advanced-select-tooltip-template]")
+    if (!template) {
+      return null
+    }
+
+    this.customTooltipTemplateContent = template.content.cloneNode(true)
+    template.remove()
+    return this.customTooltipTemplateContent
+  }
+
+  customTooltipElement(template, option) {
+    const fragment = template.cloneNode(true)
+    fragment.querySelectorAll("[data-advanced-select-tooltip-field]").forEach((element) => {
+      element.textContent = this.tooltipFieldValue(option, element.dataset.advancedSelectTooltipField)
+    })
+
+    return fragment
+  }
+
+  tooltipFieldValue(option, field) {
+    if (field === "display_label" || field === "displayLabel") {
+      return this.displayLabel(option)
+    }
+
+    const camelizedField = field.replace(/_([a-z])/g, (_match, character) => character.toUpperCase())
+    const value = option[field] ?? option[camelizedField]
+    return value === undefined || value === null ? "" : value.toString()
   }
 
   textElement(tagName, className, text) {

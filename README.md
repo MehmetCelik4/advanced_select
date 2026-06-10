@@ -484,13 +484,19 @@ For richer layouts — a table, badges, compatibility columns, etc. — pass `to
 ) %>
 ```
 
+The partial is rendered on the server for the initial selection, and the controller keeps it in sync client-side as the selection changes — no Turbo Stream round-trip. To opt in, mark the row container and provide a one-row `<template>` the controller clones per selected option:
+
+- `data-advanced-select-tooltip-list` on the element that holds the rows (the same hook the built-in list uses).
+- `<template data-advanced-select-tooltip-template>` containing the markup for a single selected row.
+- `data-advanced-select-tooltip-field="…"` on the elements inside the template that should be filled in. Available fields are `id`, `value`, `label`, and `display_label`; values are written with `textContent` (text only, no markup).
+
 ```erb
 <%# app/views/alternatives/_tooltip.html.erb %>
 <table>
   <thead>
     <tr><th>Code &amp; Name</th><th>Type</th></tr>
   </thead>
-  <tbody>
+  <tbody data-advanced-select-tooltip-list>
     <% selected_options.each do |option| %>
       <tr>
         <td><%= option.fetch(:display_label) %></td>
@@ -498,10 +504,16 @@ For richer layouts — a table, badges, compatibility columns, etc. — pass `to
       </tr>
     <% end %>
   </tbody>
+  <template data-advanced-select-tooltip-template>
+    <tr>
+      <td data-advanced-select-tooltip-field="display_label"></td>
+      <td data-advanced-select-tooltip-field="value"></td>
+    </tr>
+  </template>
 </table>
 ```
 
-A custom `tooltip_partial` is rendered once on the server, so it is best for display-oriented content. If your selection changes on the client and the custom tooltip must reflect it live, re-render the field (for example via a Turbo Stream) after the change. The built-in `tooltip: true` list updates client-side automatically.
+The initial server-rendered rows stay until the first change, then the controller rebuilds them from the template — so just like `tooltip: true`, the custom tooltip updates client-side automatically. A custom partial without a `<template>` still renders once and stays static, which is fine for display-only content.
 
 ### Add Mode
 
