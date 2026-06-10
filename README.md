@@ -77,7 +77,7 @@ AdvancedSelect does not provide query objects, model concerns, authorization log
 Add the gem to the host Rails app:
 
 ```ruby
-gem "advanced_select", "~> 0.1.5"
+gem "advanced_select", "~> 0.1.7"
 ```
 
 Run the installer:
@@ -488,19 +488,20 @@ The partial is rendered on the server for the initial selection, and the control
 
 - `data-advanced-select-tooltip-list` on the element that holds the rows (the same hook the built-in list uses).
 - `<template data-advanced-select-tooltip-template>` containing the markup for a single selected row.
-- `data-advanced-select-tooltip-field="…"` on the elements inside the template that should be filled in. Available fields are `id`, `value`, `label`, and `display_label`; values are written with `textContent` (text only, no markup).
+- `data-advanced-select-tooltip-field="…"` on the elements inside the template that should be filled in. Available fields include `id`, `value`, `label`, `display_label`, extra option keys, and nested paths such as `test.name`; values are written with `textContent` (text only, no markup).
 
 ```erb
 <%# app/views/alternatives/_tooltip.html.erb %>
 <table>
   <thead>
-    <tr><th>Code &amp; Name</th><th>Type</th></tr>
+    <tr><th>Code &amp; Name</th><th>Type</th><th>Test</th></tr>
   </thead>
   <tbody data-advanced-select-tooltip-list>
     <% selected_options.each do |option| %>
       <tr>
         <td><%= option.fetch(:display_label) %></td>
         <td><%= option.fetch(:value) %></td>
+        <td><%= option.dig(:test, :name) %></td>
       </tr>
     <% end %>
   </tbody>
@@ -508,6 +509,7 @@ The partial is rendered on the server for the initial selection, and the control
     <tr>
       <td data-advanced-select-tooltip-field="display_label"></td>
       <td data-advanced-select-tooltip-field="value"></td>
+      <td data-advanced-select-tooltip-field="test.name"></td>
     </tr>
   </template>
 </table>

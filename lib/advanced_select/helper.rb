@@ -50,12 +50,12 @@ module AdvancedSelect
 
     def advanced_select_selected_options(selected)
       advanced_select_array(selected).map do |option|
-        {
+        option.to_h.merge(
           id: option.fetch(:id).to_s,
           value: advanced_select_option_value(option),
           label: advanced_select_option_label(option),
           display_label: advanced_select_option_display_label(option)
-        }
+        )
       end
     end
 
@@ -79,7 +79,8 @@ module AdvancedSelect
           advanced_select_value_param: option.fetch(:id),
           advanced_select_submit_value_param: advanced_select_option_value(option),
           advanced_select_label_param: advanced_select_option_label(option),
-          advanced_select_display_label_param: advanced_select_option_display_label(option)
+          advanced_select_display_label_param: advanced_select_option_display_label(option),
+          advanced_select_option_param: advanced_select_option_payload(option)
         }
       ) do
         safe_join([
@@ -168,6 +169,15 @@ module AdvancedSelect
 
     def advanced_select_option_description(option)
       option[:description].to_s
+    end
+
+    def advanced_select_option_payload(option)
+      option.to_h.merge(
+        id: option.fetch(:id).to_s,
+        value: advanced_select_option_value(option),
+        label: advanced_select_option_label(option),
+        display_label: advanced_select_option_display_label(option)
+      ).to_json
     end
 
     def advanced_select_display_label(label)
