@@ -5,7 +5,7 @@
       <th>Type</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody data-advanced-select-tooltip-list>
     <% selected_options.each do |option| %>
       <tr>
         <td><%= option.fetch(:display_label) %></td>
@@ -13,4 +13,10 @@
       </tr>
     <% end %>
   </tbody>
+  <template data-advanced-select-tooltip-template>
+    <tr>
+      <td data-advanced-select-tooltip-field="display_label"></td>
+      <td data-advanced-select-tooltip-field="value"></td>
+    </tr>
+  </template>
 </table>
