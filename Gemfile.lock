@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    advanced_select (0.1.5)
+    advanced_select (0.1.6)
       actionview (>= 7.1)
       railties (>= 7.1)
       stimulus-rails (>= 1.3)
