@@ -342,7 +342,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   test "broadcasts advanced-select:change with the selected value" do
     visit root_path
-    record_advanced_select_events
+    record_advanced_select_events("example[item_id]")
 
     find("#example_item_id_trigger").click
     find("#example_item_id_options button", text: "Local One").click
@@ -359,7 +359,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   test "broadcasts the submit value rather than the option id" do
     visit root_path
-    record_advanced_select_events
+    record_advanced_select_events("example[submit_id]")
 
     find("#example_submit_id_trigger").click
     find("#example_submit_id_options button", text: "Submit Item").click
@@ -370,7 +370,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   test "broadcasts an array of values for multiple selects" do
     visit root_path
-    record_advanced_select_events
+    record_advanced_select_events("example[multiple_ids][]")
 
     find("#example_multiple_ids_trigger").click
     find("#example_multiple_ids_options button", text: "Multi One").click
@@ -388,7 +388,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
     assert_selector "input[name='example[multiple_ids_without_blank][]'][value='multi-1']", visible: false
 
-    record_advanced_select_events
+    record_advanced_select_events("example[multiple_ids_without_blank][]")
     find("#example_multiple_ids_without_blank_clear").click
 
     assert_no_selector "input[name='example[multiple_ids_without_blank][]']", visible: false
@@ -467,11 +467,13 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   private
 
-  def record_advanced_select_events
+  def record_advanced_select_events(name)
     page.execute_script(<<~JS)
       window.__advancedSelectEvents = []
       document.addEventListener("advanced-select:change", (event) => {
-        window.__advancedSelectEvents.push(event.detail)
+        if (event.detail.name === "#{name}") {
+          window.__advancedSelectEvents.push(event.detail)
+        }
       })
     JS
   end
