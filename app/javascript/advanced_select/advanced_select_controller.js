@@ -8,6 +8,7 @@ export default class extends Controller {
     autoSelectSingle: { type: Boolean, default: true },
     delay: { type: Number, default: 200 },
     dependentFields: Object,
+    disabled: Boolean,
     eager: { type: Boolean, default: true },
     emptyText: String,
     errorText: String,
@@ -65,7 +66,40 @@ export default class extends Controller {
     this.expanded ? this.close() : this.open()
   }
 
+  disable() {
+    this.disabledValue = true
+  }
+
+  enable() {
+    this.disabledValue = false
+  }
+
+  disabledValueChanged() {
+    if (!this.hasTriggerTarget) {
+      return
+    }
+
+    const disabled = this.disabledValue
+    const classes = this.classList(this.element.dataset.advancedSelectDisabledClass || "ui-advanced-select-disabled")
+
+    this.triggerTarget.disabled = disabled
+    this.hiddenFieldsTarget.querySelectorAll("input").forEach((input) => { input.disabled = disabled })
+    this.clearTarget.classList.toggle("hidden", disabled || this.selectedValue.length === 0)
+
+    if (classes.length) {
+      disabled ? this.element.classList.add(...classes) : this.element.classList.remove(...classes)
+    }
+
+    if (disabled && this.expanded) {
+      this.close()
+    }
+  }
+
   open() {
+    if (this.disabledValue) {
+      return
+    }
+
     this.hideTooltip(true)
     this.dropdownTarget.classList.remove("hidden")
     this.triggerTarget.setAttribute("aria-expanded", "true")
@@ -120,6 +154,11 @@ export default class extends Controller {
   clear(event) {
     event.preventDefault()
     event.stopPropagation()
+
+    if (this.disabledValue) {
+      return
+    }
+
     this.selectedValue = []
     this.renderSelection()
     this.close()
@@ -362,7 +401,7 @@ export default class extends Controller {
     this.renderTooltip()
     this.renderOptionsState()
     this.caretTarget.classList.toggle("hidden", this.selectedValue.length > 0)
-    this.clearTarget.classList.toggle("hidden", this.selectedValue.length === 0)
+    this.clearTarget.classList.toggle("hidden", this.disabledValue || this.selectedValue.length === 0)
     this.dispatchValueChange()
   }
 
@@ -515,6 +554,7 @@ export default class extends Controller {
       input.type = "hidden"
       input.name = this.nameValue
       input.value = option ? option.value || option.id : ""
+      input.disabled = this.disabledValue
 
       if (!this.multipleValue) {
         input.id = this.inputIdValue
