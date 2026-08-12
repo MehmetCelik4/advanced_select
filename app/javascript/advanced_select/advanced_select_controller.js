@@ -371,6 +371,21 @@ export default class extends Controller {
     if (input) {
       input.dispatchEvent(new Event("change", { bubbles: true }))
     }
+
+    this.element.dispatchEvent(new CustomEvent("advanced-select:change", {
+      bubbles: true,
+      detail: {
+        name: this.nameValue,
+        value: this.currentValue,
+        options: [...this.selectedValue]
+      }
+    }))
+  }
+
+  get currentValue() {
+    const values = this.selectedValue.map((option) => option.value || option.id)
+
+    return this.multipleValue ? values : (values[0] || "")
   }
 
   renderOptionsState() {
