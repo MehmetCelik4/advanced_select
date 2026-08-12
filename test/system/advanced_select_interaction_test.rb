@@ -340,7 +340,75 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     end
   end
 
+  test "broadcasts advanced-select:change with the selected value" do
+    visit root_path
+    record_advanced_select_events
+
+    find("#example_item_id_trigger").click
+    find("#example_item_id_options button", text: "Local One").click
+
+    assert_selector "#example_item_id_summary", text: "Local One"
+
+    event = advanced_select_events.last
+
+    assert_equal 1, advanced_select_events.size
+    assert_equal "example[item_id]", event["name"]
+    assert_equal "local-1", event["value"]
+    assert_equal ["Local One"], event["options"].map { |option| option["label"] }
+  end
+
+  test "broadcasts the submit value rather than the option id" do
+    visit root_path
+    record_advanced_select_events
+
+    find("#example_submit_id_trigger").click
+    find("#example_submit_id_options button", text: "Submit Item").click
+
+    assert_selector "#example_submit_id_summary", text: "Submit Item"
+    assert_equal "submit-7", advanced_select_events.last["value"]
+  end
+
+  test "broadcasts an array of values for multiple selects" do
+    visit root_path
+    record_advanced_select_events
+
+    find("#example_multiple_ids_trigger").click
+    find("#example_multiple_ids_options button", text: "Multi One").click
+    find("#example_multiple_ids_options button", text: "Multi Two").click
+
+    assert_selector "#example_multiple_ids_summary", text: "Multi Two"
+    assert_equal [["multi-1"], %w[multi-2 multi-1]], advanced_select_events.map { |event| event["value"] }
+  end
+
+  test "broadcasts when the last value is cleared without a blank hidden field" do
+    visit root_path
+
+    find("#example_multiple_ids_without_blank_trigger").click
+    find("#example_multiple_ids_without_blank_options button", text: "Multi One").click
+
+    assert_selector "input[name='example[multiple_ids_without_blank][]'][value='multi-1']", visible: false
+
+    record_advanced_select_events
+    find("#example_multiple_ids_without_blank_clear").click
+
+    assert_no_selector "input[name='example[multiple_ids_without_blank][]']", visible: false
+    assert_equal [[]], advanced_select_events.map { |event| event["value"] }
+  end
+
   private
+
+  def record_advanced_select_events
+    page.execute_script(<<~JS)
+      window.__advancedSelectEvents = []
+      document.addEventListener("advanced-select:change", (event) => {
+        window.__advancedSelectEvents.push(event.detail)
+      })
+    JS
+  end
+
+  def advanced_select_events
+    page.evaluate_script("window.__advancedSelectEvents")
+  end
 
   def assert_selected_option_check(select_id, text)
     option = find("##{select_id}_options button[aria-selected='true']", text: text)

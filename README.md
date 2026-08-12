@@ -22,6 +22,7 @@ AdvancedSelect is a small Rails engine for rendering an advanced select input wi
 - [Dependent Fields](#dependent-fields)
 - [Custom Option Content](#custom-option-content)
 - [Option Contract](#option-contract)
+- [Events](#events)
 - [API Reference](#api-reference)
 - [Local Development](#local-development)
 - [i18n](#i18n)
@@ -743,6 +744,51 @@ Grouped options use this shape:
     ]
   }
 ]
+```
+
+### Events
+
+Every value change dispatches two events:
+
+| Event | Target | Purpose |
+| --- | --- | --- |
+| `change` | the first hidden input | native form behaviour and [dependent fields](#dependent-fields) |
+| `advanced-select:change` | the root element | application listeners that need the whole selection |
+
+Both bubble. `advanced-select:change` carries a `detail` payload:
+
+```js
+{
+  name: "record[item_ids][]",
+  value: ["3", "7"],
+  options: [
+    { id: "3", value: "3", label: "Item A", display_label: "Item A" },
+    { id: "7", value: "7", label: "Item B", display_label: "Item B" }
+  ]
+}
+```
+
+`value` is the submit value — the option's `value` when it defines one, otherwise its `id`. It is an
+array for multiple selects, a string for single selects, and empty when nothing is selected. A
+multiple select lists the most recently chosen option first, matching the order of its hidden
+inputs.
+
+Bind it like any other event:
+
+```erb
+data-action="advanced-select:change->my-controller#refresh"
+```
+
+Prefer it over `change` on multiple selects. `change` is dispatched from the first hidden input, so
+it does not fire at all once the last value is cleared from a field rendered with
+`include_hidden: false` — at that point the field has no inputs left.
+
+The current value is also readable from the controller:
+
+```js
+const select = application.getControllerForElementAndIdentifier(element, "advanced-select")
+
+select.currentValue // => ["3", "7"]
 ```
 
 ### API Reference
