@@ -2,6 +2,7 @@ module AdvancedSelect
   class ClassMap
     DEFAULTS = {
       root: "ui-advanced-select",
+      disabled: "ui-advanced-select-disabled",
       trigger: "ui-advanced-select-trigger",
       summary: "ui-advanced-select-summary",
       placeholder: "ui-advanced-select-placeholder",

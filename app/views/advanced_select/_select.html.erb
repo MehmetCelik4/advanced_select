@@ -1,5 +1,7 @@
-<div class="<%= advanced_select_class(class_map, :root) %>"
+<div class="<%= advanced_select_class(class_map, :root, (:disabled if disabled)) %>"
      data-controller="advanced-select"
+     data-advanced-select-disabled-value="<%= disabled %>"
+     data-advanced-select-disabled-class="<%= advanced_select_state_class(class_map, :disabled) %>"
      data-advanced-select-url-value="<%= options_url %>"
      data-advanced-select-target-id-value="<%= target_id %>"
      data-advanced-select-name-value="<%= name %>"
@@ -31,13 +33,13 @@
   <div data-advanced-select-target="hiddenFields">
     <% if multiple %>
       <% if include_hidden %>
-        <%= hidden_field_tag name, "", id: nil %>
+        <%= hidden_field_tag name, "", id: nil, disabled: disabled %>
       <% end %>
       <% selected_options.each do |option| %>
-        <%= hidden_field_tag name, option.fetch(:value, option.fetch(:id)) %>
+        <%= hidden_field_tag name, option.fetch(:value, option.fetch(:id)), disabled: disabled %>
       <% end %>
     <% else %>
-      <%= hidden_field_tag name, selected_options.first&.fetch(:value, selected_options.first&.fetch(:id)), id: id %>
+      <%= hidden_field_tag name, selected_options.first&.fetch(:value, selected_options.first&.fetch(:id)), id: id, disabled: disabled %>
     <% end %>
   </div>
 
@@ -49,13 +51,14 @@
           aria-haspopup="listbox"
           aria-expanded="false"
           aria-controls="<%= "#{id}_dropdown" %>"
+          <%= "disabled" if disabled %>
           data-advanced-select-target="trigger"
           data-action="advanced-select#toggle keydown->advanced-select#keydown<%= " mouseenter->advanced-select#showTooltip mouseleave->advanced-select#hideTooltip" if tooltip_enabled %>">
     <span id="<%= "#{id}_summary" %>" class="<%= advanced_select_class(class_map, :summary) %>" data-advanced-select-target="summary">
       <%= render partial: "advanced_select/summary", locals: { selected_options: selected_options, multiple: multiple, placeholder: placeholder, summary_mode: summary_mode, class_map: class_map } %>
     </span>
     <span id="<%= "#{id}_caret" %>" class="<%= [advanced_select_class(class_map, :caret), ("hidden" if selected_options.any?)].compact.join(" ") %>" data-advanced-select-target="caret">&#8964;</span>
-    <span id="<%= "#{id}_clear" %>" class="<%= [advanced_select_class(class_map, :clear), ("hidden" if selected_options.empty?)].compact.join(" ") %>" data-advanced-select-target="clear" data-action="click->advanced-select#clear">&times;</span>
+    <span id="<%= "#{id}_clear" %>" class="<%= [advanced_select_class(class_map, :clear), ("hidden" if disabled || selected_options.empty?)].compact.join(" ") %>" data-advanced-select-target="clear" data-action="click->advanced-select#clear">&times;</span>
   </button>
 
   <% if tooltip_enabled %>

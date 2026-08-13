@@ -270,3 +270,16 @@
   classes: styled_advanced_select_classes,
   append_classes: styled_advanced_select_append_classes
 ) %>
+
+<%= advanced_select_tag(
+  "example[disabled_id]",
+  id: "example_disabled_id",
+  selected: { id: "disabled-1", label: "Disabled One" },
+  options: [
+    { id: "disabled-1", label: "Disabled One" },
+    { id: "disabled-2", label: "Disabled Two" }
+  ],
+  placeholder: "Choose disabled item",
+  disabled: true,
+  searchable: false
+) %>

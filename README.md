@@ -23,6 +23,7 @@ AdvancedSelect is a small Rails engine for rendering an advanced select input wi
 - [Custom Option Content](#custom-option-content)
 - [Option Contract](#option-contract)
 - [Events](#events)
+- [Disabled State](#disabled-state)
 - [API Reference](#api-reference)
 - [Local Development](#local-development)
 - [i18n](#i18n)
@@ -791,6 +792,49 @@ const select = application.getControllerForElementAndIdentifier(element, "advanc
 select.currentValue // => ["3", "7"]
 ```
 
+### Disabled State
+
+Pass `disabled: true` to lock a field. It still renders its current selection —
+the point is to show the value, not to hide it — but it cannot be opened,
+searched, or cleared, and its value is **left out of the form**:
+
+```erb
+<%= advanced_select_tag(
+  "record[item_id]",
+  id: "record_item_id",
+  selected: selected_option,
+  options: options,
+  placeholder: "Choose an item",
+  disabled: true
+) %>
+```
+
+This matches a native `<select disabled>`: the browser omits a disabled field
+from the submitted params, so an update never writes a value the user was not
+allowed to change.
+
+The trigger carries the `disabled` attribute, so mouse and keyboard are both
+blocked by the browser rather than by CSS alone. The root element takes the
+`disabled` class from the class map.
+
+To toggle the state after render — from a Stimulus controller, or from a Turbo
+Stream that flips the attribute — set the value on the root element:
+
+```js
+element.dataset.advancedSelectDisabledValue = "true"
+```
+
+The controller reacts on its own: it disables the hidden inputs, applies the
+class, hides the clear control, and closes the dropdown if it happens to be
+open. The same thing is available as a method:
+
+```js
+const select = application.getControllerForElementAndIdentifier(element, "advanced-select")
+
+select.disable()
+select.enable()
+```
+
 ### API Reference
 
 `advanced_select_tag`:
@@ -806,6 +850,7 @@ advanced_select_tag(
   multiple: false,
   searchable: true,
   add_mode: false,
+  disabled: false,
   dependent_fields: {},
   include_hidden: true,
   auto_select_single: true,
@@ -822,6 +867,8 @@ advanced_select_tag(
 `summary_mode:` controls how a multiple select renders its collapsed trigger label. The default `:tokens` shows the first two selected display labels followed by `& +N`. Pass `:count` to render a single localized `"N selected"` summary instead (see [Count Summary](#count-summary)).
 
 `tooltip:` / `tooltip_partial:` enable an optional hover tooltip on the trigger (see [Selection Tooltip](#selection-tooltip)).
+
+`disabled:` locks the field (see [Disabled State](#disabled-state)).
 
 `advanced_select_options_tag`:
 

@@ -342,7 +342,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   test "broadcasts advanced-select:change with the selected value" do
     visit root_path
-    record_advanced_select_events
+    record_advanced_select_events("example[item_id]")
 
     find("#example_item_id_trigger").click
     find("#example_item_id_options button", text: "Local One").click
@@ -359,7 +359,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   test "broadcasts the submit value rather than the option id" do
     visit root_path
-    record_advanced_select_events
+    record_advanced_select_events("example[submit_id]")
 
     find("#example_submit_id_trigger").click
     find("#example_submit_id_options button", text: "Submit Item").click
@@ -370,7 +370,7 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   test "broadcasts an array of values for multiple selects" do
     visit root_path
-    record_advanced_select_events
+    record_advanced_select_events("example[multiple_ids][]")
 
     find("#example_multiple_ids_trigger").click
     find("#example_multiple_ids_options button", text: "Multi One").click
@@ -388,26 +388,110 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
     assert_selector "input[name='example[multiple_ids_without_blank][]'][value='multi-1']", visible: false
 
-    record_advanced_select_events
+    record_advanced_select_events("example[multiple_ids_without_blank][]")
     find("#example_multiple_ids_without_blank_clear").click
 
     assert_no_selector "input[name='example[multiple_ids_without_blank][]']", visible: false
     assert_equal [[]], advanced_select_events.map { |event| event["value"] }
   end
 
+  test "renders its selection but cannot be opened while disabled" do
+    visit root_path
+
+    assert_selector ".ui-advanced-select-disabled #example_disabled_id_trigger[disabled]"
+    assert_selector "#example_disabled_id_summary", text: "Disabled One"
+    assert_equal "none", dropdown_display("example_disabled_id")
+
+    page.execute_script("document.getElementById('example_disabled_id_trigger').click()")
+
+    assert_equal "none", dropdown_display("example_disabled_id")
+  end
+
+  test "leaves a disabled value out of the form" do
+    visit root_path
+
+    assert_selector "input[name='example[disabled_id]'][value='disabled-1'][disabled]", visible: false
+  end
+
+  test "hides the clear control while disabled" do
+    visit root_path
+
+    assert_no_selector "#example_disabled_id_clear", visible: true
+  end
+
+  test "enabling at runtime restores interaction and form submission" do
+    visit root_path
+    set_disabled("example_disabled_id", false)
+
+    assert_no_selector ".ui-advanced-select-disabled #example_disabled_id_trigger"
+    assert_no_selector "input[name='example[disabled_id]'][disabled]", visible: false
+
+    find("#example_disabled_id_trigger").click
+    find("#example_disabled_id_options button", text: "Disabled Two").click
+
+    assert_selector "#example_disabled_id_summary", text: "Disabled Two"
+    assert_selector "input[name='example[disabled_id]'][value='disabled-2']", visible: false
+    assert_no_selector "input[name='example[disabled_id]'][disabled]", visible: false
+  end
+
+  test "disabling at runtime closes the dropdown and drops the value from the form" do
+    visit root_path
+
+    find("#example_item_id_trigger").click
+
+    assert_selector "#example_item_id_options button", text: "Local One"
+
+    set_disabled("example_item_id", true)
+
+    assert_equal "none", dropdown_display("example_item_id")
+    assert_selector ".ui-advanced-select-disabled #example_item_id_trigger[disabled]"
+    assert_selector "input[name='example[item_id]'][disabled]", visible: false
+  end
+
+  test "disabling at runtime hides the clear control and enabling brings it back" do
+    visit root_path
+
+    find("#example_item_id_trigger").click
+    find("#example_item_id_options button", text: "Local One").click
+
+    assert_selector "#example_item_id_clear", visible: true
+
+    set_disabled("example_item_id", true)
+
+    assert_no_selector "#example_item_id_clear", visible: true
+
+    set_disabled("example_item_id", false)
+
+    assert_selector "#example_item_id_clear", visible: true
+  end
+
   private
 
-  def record_advanced_select_events
+  def record_advanced_select_events(name)
     page.execute_script(<<~JS)
       window.__advancedSelectEvents = []
       document.addEventListener("advanced-select:change", (event) => {
-        window.__advancedSelectEvents.push(event.detail)
+        if (event.detail.name === "#{name}") {
+          window.__advancedSelectEvents.push(event.detail)
+        }
       })
     JS
   end
 
   def advanced_select_events
     page.evaluate_script("window.__advancedSelectEvents")
+  end
+
+  def dropdown_display(select_id)
+    page.evaluate_script("getComputedStyle(document.getElementById('#{select_id}_dropdown')).display")
+  end
+
+  def set_disabled(select_id, disabled)
+    page.execute_script(<<~JS)
+      document.getElementById("#{select_id}_trigger")
+              .closest("[data-controller~='advanced-select']")
+              .dataset.advancedSelectDisabledValue = "#{disabled}"
+    JS
   end
 
   def assert_selected_option_check(select_id, text)

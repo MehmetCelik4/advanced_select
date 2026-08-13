@@ -11,6 +11,16 @@
   display: none !important;
 }
 
+.ui-advanced-select-disabled .ui-advanced-select-trigger {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.ui-advanced-select-disabled .ui-advanced-select-clear {
+  display: none;
+}
+
 .ui-advanced-select-trigger {
   align-items: center;
   background: #ffffff;
