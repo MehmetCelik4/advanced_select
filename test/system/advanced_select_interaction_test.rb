@@ -395,6 +395,131 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_equal [[]], advanced_select_events.map { |event| event["value"] }
   end
 
+  test "reads the submit value through getValue" do
+    visit root_path
+
+    assert_equal "", select_call("example_submit_id", "getValue()")
+
+    find("#example_submit_id_trigger").click
+    find("#example_submit_id_options button", text: "Submit Item").click
+
+    assert_selector "#example_submit_id_summary", text: "Submit Item"
+    assert_equal "submit-7", select_call("example_submit_id", "getValue()")
+  end
+
+  test "reads an array through getValue on a multiple select" do
+    visit root_path
+
+    assert_equal [], select_call("example_multiple_ids", "getValue()")
+
+    find("#example_multiple_ids_trigger").click
+    find("#example_multiple_ids_options button", text: "Multi One").click
+    find("#example_multiple_ids_options button", text: "Multi Two").click
+
+    assert_equal %w[multi-2 multi-1], select_call("example_multiple_ids", "getValue()")
+  end
+
+  test "selects a known option through setValue" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-2')")
+
+    assert_selector "#example_item_id_summary", text: "Local Two"
+    assert_selector "input[name='example[item_id]'][value='local-2']", visible: false
+
+    find("#example_item_id_trigger").click
+
+    assert_selected_option_check "example_item_id", "Local Two"
+  end
+
+  test "resolves setValue against the option id as well as its submit value" do
+    visit root_path
+    select_call("example_submit_id", "setValue('identity-7')")
+
+    assert_selector "#example_submit_id_summary", text: "Submit Item"
+    assert_selector "input[name='example[submit_id]'][value='submit-7']", visible: false
+  end
+
+  test "keeps an unknown setValue as a raw value" do
+    visit root_path
+    select_call("example_item_id", "setValue('not-in-the-list')")
+
+    assert_selector "input[name='example[item_id]'][value='not-in-the-list']", visible: false
+    assert_selector "#example_item_id_summary", text: "not-in-the-list"
+  end
+
+  test "assigns every value of an array through setValue on a multiple select" do
+    visit root_path
+    select_call("example_multiple_ids", "setValue(['multi-1', 'multi-2'])")
+
+    assert_selector "input[name='example[multiple_ids][]'][value='multi-1']", visible: false
+    assert_selector "input[name='example[multiple_ids][]'][value='multi-2']", visible: false
+    assert_equal %w[multi-1 multi-2], select_call("example_multiple_ids", "getValue()")
+  end
+
+  test "keeps only the first value of an array on a single select" do
+    visit root_path
+    select_call("example_item_id", "setValue(['local-2', 'local-1'])")
+
+    assert_equal "local-2", select_call("example_item_id", "getValue()")
+    assert_no_selector "input[name='example[item_id]'][value='local-1']", visible: false
+  end
+
+  test "clears the selection when setValue receives a blank value" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-2')")
+
+    assert_selector "input[name='example[item_id]'][value='local-2']", visible: false
+
+    select_call("example_item_id", "setValue('')")
+
+    assert_no_selector "input[name='example[item_id]'][value='local-2']", visible: false
+    assert_equal "", select_call("example_item_id", "getValue()")
+  end
+
+  test "broadcasts a change from setValue unless it is silent" do
+    visit root_path
+    record_advanced_select_events("example[item_id]")
+
+    select_call("example_item_id", "setValue('local-1')")
+
+    assert_selector "#example_item_id_summary", text: "Local One"
+    assert_equal ["local-1"], advanced_select_events.map { |event| event["value"] }
+
+    select_call("example_item_id", "setValue('local-2', { silent: true })")
+
+    assert_selector "#example_item_id_summary", text: "Local Two"
+    assert_equal ["local-1"], advanced_select_events.map { |event| event["value"] }
+  end
+
+  test "broadcasts again after a silent setValue" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-1', { silent: true })")
+
+    assert_selector "#example_item_id_summary", text: "Local One"
+
+    record_advanced_select_events("example[item_id]")
+    select_call("example_item_id", "setValue('local-2')")
+
+    assert_selector "#example_item_id_summary", text: "Local Two"
+    assert_equal ["local-2"], advanced_select_events.map { |event| event["value"] }
+  end
+
+  test "re-renders the current selection through refresh" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-1', { silent: true })")
+
+    assert_selector "#example_item_id_summary", text: "Local One"
+
+    page.execute_script("document.getElementById('example_item_id_summary').replaceChildren()")
+
+    assert_selector "#example_item_id_summary", text: ""
+
+    select_call("example_item_id", "refresh()")
+
+    assert_selector "#example_item_id_summary", text: "Local One"
+    assert_equal "local-1", select_call("example_item_id", "getValue()")
+  end
+
   test "renders its selection but cannot be opened while disabled" do
     visit root_path
 
@@ -480,6 +605,15 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   def advanced_select_events
     page.evaluate_script("window.__advancedSelectEvents")
+  end
+
+  def select_call(select_id, expression)
+    page.evaluate_script(<<~JS)
+      (() => {
+        const root = document.getElementById("#{select_id}_trigger").closest("[data-controller~='advanced-select']")
+        return window.Stimulus.getControllerForElementAndIdentifier(root, "advanced-select").#{expression}
+      })()
+    JS
   end
 
   def dropdown_display(select_id)

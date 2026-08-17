@@ -23,6 +23,7 @@ AdvancedSelect is a small Rails engine for rendering an advanced select input wi
 - [Custom Option Content](#custom-option-content)
 - [Option Contract](#option-contract)
 - [Events](#events)
+- [Reading And Writing The Value](#reading-and-writing-the-value)
 - [Disabled State](#disabled-state)
 - [API Reference](#api-reference)
 - [Local Development](#local-development)
@@ -784,13 +785,37 @@ Prefer it over `change` on multiple selects. `change` is dispatched from the fir
 it does not fire at all once the last value is cleared from a field rendered with
 `include_hidden: false` — at that point the field has no inputs left.
 
-The current value is also readable from the controller:
+The current value is also readable from the controller — see [Reading And Writing The Value](#reading-and-writing-the-value).
+
+### Reading And Writing The Value
+
+The controller exposes the selection as a small programmatic API, so host code can drive a field
+without reaching into its markup:
 
 ```js
 const select = application.getControllerForElementAndIdentifier(element, "advanced-select")
 
-select.currentValue // => ["3", "7"]
+select.getValue()                              // => "7", or ["3", "7"] on a multiple select
+select.setValue("7")
+select.setValue(["3", "7"])                    // multiple selects also accept a single value
+select.setValue("7", { silent: true })         // assign without broadcasting a change
+select.refresh()                               // re-render from the current selection
 ```
+
+`getValue` returns the submit value — the option's `value` when it defines one, otherwise its `id`.
+It is a string for single selects, an array for multiple selects, and empty when nothing is
+selected.
+
+`setValue` resolves each value against the options currently in the list, matching either the
+option's id or its submit value, so `setValue("identity-7")` and `setValue("submit-7")` select the
+same row. A value that matches no option is still assigned and submitted, using the value itself as
+the label — this keeps a server-assigned value from being silently dropped. Passing `""`, `null`, or
+`[]` clears the field. On a single select only the first value of an array is kept.
+
+`silent: true` suppresses the `change` and `advanced-select:change` events for that one assignment.
+Use it when the value is being restored rather than chosen — replacing options after a Turbo Stream
+update, for example — so dependent fields do not cascade off a change the user did not make. The
+suppression lasts for a single render; the next assignment broadcasts normally.
 
 ### Disabled State
 
