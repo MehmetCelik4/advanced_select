@@ -190,6 +190,30 @@ export default class extends Controller {
     this.renderSelection()
   }
 
+  appendOption(option) {
+    const normalized = this.normalizeSelectedOption(option)
+    const present = this.optionElements.some((element) => element.dataset.advancedSelectValueParam === normalized.id)
+
+    if (present) {
+      return
+    }
+
+    this.currentOptionsTarget.appendChild(this.optionElement(normalized))
+    this.renderOptionsState()
+  }
+
+  replaceOptions(options, { selected, silent = true } = {}) {
+    this.currentOptionsTarget.replaceChildren(...options.map((option) => this.optionElement(option)))
+
+    if (selected === undefined) {
+      this.suppressChange = silent
+      this.renderSelection()
+      return
+    }
+
+    this.setValue(selected, { silent })
+  }
+
   refresh() {
     this.renderSelection()
   }
