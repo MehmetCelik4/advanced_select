@@ -395,6 +395,51 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_equal [[]], advanced_select_events.map { |event| event["value"] }
   end
 
+  test "builds an option element with the same shape as a server-rendered one" do
+    visit root_path
+
+    server = option_shape("document.querySelector(\"#example_item_id_options [data-advanced-select-value-param='local-1']\")")
+    client = option_shape(build_option_script("example_item_id", "{ id: 'local-1', label: 'Local One' }"))
+
+    assert_equal server, client
+  end
+
+  test "builds option elements with the host class map" do
+    visit root_path
+
+    client = option_shape(build_option_script("example_styled_id", "{ id: 'styled-3', label: 'Styled Three' }"))
+    server = option_shape("document.querySelector(\"#example_styled_id_options [data-advanced-select-value-param='styled-2']\")")
+
+    assert_equal "test-option-class", client.fetch("className")
+    assert_equal server.fetch("className"), client.fetch("className")
+    assert_equal server.fetch("checkClassName"), client.fetch("checkClassName")
+    assert_equal server.fetch("contentClassName"), client.fetch("contentClassName")
+  end
+
+  test "renders a description on a client-built option like the server does" do
+    visit root_path
+
+    server = option_shape("document.querySelector(\"#example_described_id_options [data-advanced-select-value-param='described-1']\")")
+    client = option_shape(
+      build_option_script("example_described_id", "{ id: 'described-1', label: 'Described One', description: 'First description' }")
+    )
+
+    assert_equal "Described OneFirst description", server.fetch("text")
+    assert_equal server, client
+  end
+
+  test "selects a client-built option that was added to the list" do
+    visit root_path
+    append_built_option("example_item_id", "{ id: 'local-9', label: 'Local Nine' }")
+
+    find("#example_item_id_trigger").click
+    find("#example_item_id_options button", text: "Local Nine").click
+
+    assert_selector "#example_item_id_summary", text: "Local Nine"
+    assert_selector "input[name='example[item_id]'][value='local-9']", visible: false
+    assert_equal "local-9", select_call("example_item_id", "getValue()")
+  end
+
   test "reads the submit value through getValue" do
     visit root_path
 
@@ -605,6 +650,46 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   def advanced_select_events
     page.evaluate_script("window.__advancedSelectEvents")
+  end
+
+  def append_built_option(select_id, option_json)
+    page.execute_script(<<~JS)
+      ((select) => select.currentOptionsTarget.appendChild(select.optionElement(#{option_json})))(
+        window.Stimulus.getControllerForElementAndIdentifier(
+          document.getElementById("#{select_id}_trigger").closest("[data-controller~='advanced-select']"),
+          "advanced-select"
+        )
+      )
+    JS
+  end
+
+  def build_option_script(select_id, option_json)
+    <<~JS.strip
+      window.Stimulus.getControllerForElementAndIdentifier(
+        document.getElementById("#{select_id}_trigger").closest("[data-controller~='advanced-select']"),
+        "advanced-select"
+      ).optionElement(#{option_json})
+    JS
+  end
+
+  def option_shape(element_script)
+    page.evaluate_script(<<~JS)
+      ((element) => ({
+        tag: element.tagName,
+        className: element.className,
+        role: element.getAttribute("role"),
+        ariaSelected: element.getAttribute("aria-selected"),
+        action: element.dataset.action,
+        value: element.dataset.advancedSelectValueParam,
+        submitValue: element.dataset.advancedSelectSubmitValueParam,
+        label: element.dataset.advancedSelectLabelParam,
+        displayLabel: element.dataset.advancedSelectDisplayLabelParam,
+        checkClassName: element.querySelector("[data-advanced-select-option-check]").className,
+        contentClassName: element.children[1].className,
+        childTags: Array.from(element.children[1].children).map((child) => child.tagName + ":" + child.className),
+        text: element.textContent.replace(/\\s+/g, " ").trim()
+      }))(#{element_script})
+    JS
   end
 
   def select_call(select_id, expression)

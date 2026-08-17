@@ -41,6 +41,10 @@ export default class extends Controller {
     this.optionActiveClasses = this.classList(this.element.dataset.advancedSelectOptionActiveClass || "ui-advanced-select-option-active")
     this.addOptionActiveClasses = this.classList(this.element.dataset.advancedSelectAddOptionActiveClass || "")
     this.optionSelectedClasses = this.classList(this.element.dataset.advancedSelectOptionSelectedClass || "")
+    this.optionClass = this.element.dataset.advancedSelectOptionClass || "ui-advanced-select-option"
+    this.optionCheckClass = this.element.dataset.advancedSelectOptionCheckClass || "ui-advanced-select-option-check"
+    this.optionContentClass = this.element.dataset.advancedSelectOptionContentClass || "ui-advanced-select-option-content"
+    this.optionDescriptionClass = this.element.dataset.advancedSelectOptionDescriptionClass || "ui-advanced-select-option-description"
     this.selectedValue = this.selectedValue.map((option) => this.normalizeSelectedOption(option))
     this.close = this.close.bind(this)
     this.renderOptionsState()
@@ -374,6 +378,37 @@ export default class extends Controller {
     if (!this.multipleValue) {
       this.close()
     }
+  }
+
+  optionElement(option) {
+    const normalized = this.normalizeSelectedOption(option)
+    const button = document.createElement("button")
+
+    button.type = "button"
+    button.className = this.optionClass
+    button.setAttribute("role", "option")
+    button.setAttribute("aria-selected", "false")
+    button.dataset.advancedSelectOption = ""
+    button.dataset.action = "mouseenter->advanced-select#activateOption mousedown->advanced-select#choose"
+    button.dataset.advancedSelectValueParam = normalized.id
+    button.dataset.advancedSelectSubmitValueParam = normalized.value
+    button.dataset.advancedSelectLabelParam = normalized.label
+    button.dataset.advancedSelectDisplayLabelParam = normalized.displayLabel
+    button.dataset.advancedSelectOptionParam = JSON.stringify(normalized)
+
+    const check = this.textElement("span", this.optionCheckClass, "")
+    check.dataset.advancedSelectOptionCheck = ""
+
+    const content = this.textElement("span", this.optionContentClass, "")
+    content.appendChild(this.textElement("span", "", normalized.label))
+
+    if (normalized.description) {
+      content.appendChild(this.textElement("span", this.optionDescriptionClass, normalized.description))
+    }
+
+    button.append(check, content)
+
+    return button
   }
 
   optionData(element) {
