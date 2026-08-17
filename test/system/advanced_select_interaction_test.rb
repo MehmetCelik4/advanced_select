@@ -440,6 +440,90 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_equal "local-9", select_call("example_item_id", "getValue()")
   end
 
+  test "adds an option to the end of the list through appendOption" do
+    visit root_path
+    select_call("example_item_id", "appendOption({ id: 'local-9', label: 'Local Nine' })")
+
+    find("#example_item_id_trigger").click
+
+    assert_equal %w[local-1 local-2 local-9], option_values("example_item_id")
+
+    find("#example_item_id_options button", text: "Local Nine").click
+
+    assert_equal "local-9", select_call("example_item_id", "getValue()")
+  end
+
+  test "ignores an appendOption whose id is already in the list" do
+    visit root_path
+    select_call("example_item_id", "appendOption({ id: 'local-1', label: 'Something Else' })")
+
+    find("#example_item_id_trigger").click
+
+    assert_equal %w[local-1 local-2], option_values("example_item_id")
+    assert_no_selector "#example_item_id_options button", text: "Something Else"
+  end
+
+  test "keeps the selected tick after appendOption" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-2', { silent: true })")
+    select_call("example_item_id", "appendOption({ id: 'local-9', label: 'Local Nine' })")
+
+    find("#example_item_id_trigger").click
+
+    assert_selected_option_check "example_item_id", "Local Two"
+  end
+
+  test "swaps the whole list through replaceOptions and keeps the selection" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-1', { silent: true })")
+    record_advanced_select_events("example[item_id]")
+    replace_options("example_item_id", "[{ id: 'local-1', label: 'Local One' }, { id: 'fresh-1', label: 'Fresh One' }]")
+
+    find("#example_item_id_trigger").click
+
+    assert_equal %w[local-1 fresh-1], option_values("example_item_id")
+    assert_equal "local-1", select_call("example_item_id", "getValue()")
+    assert_selected_option_check "example_item_id", "Local One"
+    assert_equal [], advanced_select_events
+  end
+
+  test "keeps a selection that is missing from the replaced list" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-1', { silent: true })")
+    replace_options("example_item_id", "[{ id: 'fresh-1', label: 'Fresh One' }]")
+
+    assert_equal "local-1", select_call("example_item_id", "getValue()")
+    assert_selector "input[name='example[item_id]'][value='local-1']", visible: false
+    assert_selector "#example_item_id_summary", text: "Local One"
+  end
+
+  test "assigns a selection while replacing options" do
+    visit root_path
+    replace_options("example_item_id", "[{ id: 'fresh-1', label: 'Fresh One' }]", "{ selected: 'fresh-1' }")
+
+    assert_equal "fresh-1", select_call("example_item_id", "getValue()")
+    assert_selector "#example_item_id_summary", text: "Fresh One"
+    assert_selector "input[name='example[item_id]'][value='fresh-1']", visible: false
+  end
+
+  test "clears the selection when replaceOptions is given a null selection" do
+    visit root_path
+    select_call("example_item_id", "setValue('local-1', { silent: true })")
+    replace_options("example_item_id", "[{ id: 'fresh-1', label: 'Fresh One' }]", "{ selected: null }")
+
+    assert_equal "", select_call("example_item_id", "getValue()")
+    assert_no_selector "input[name='example[item_id]'][value='local-1']", visible: false
+  end
+
+  test "broadcasts from replaceOptions when it is not silent" do
+    visit root_path
+    record_advanced_select_events("example[item_id]")
+    replace_options("example_item_id", "[{ id: 'fresh-1', label: 'Fresh One' }]", "{ selected: 'fresh-1', silent: false }")
+
+    assert_selector "#example_item_id_summary", text: "Fresh One"
+    assert_equal ["fresh-1"], advanced_select_events.map { |event| event["value"] }
+  end
+
   test "reads the submit value through getValue" do
     visit root_path
 
@@ -650,6 +734,17 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   def advanced_select_events
     page.evaluate_script("window.__advancedSelectEvents")
+  end
+
+  def option_values(select_id)
+    page.evaluate_script(<<~JS)
+      Array.from(document.querySelectorAll("##{select_id}_options [data-advanced-select-option]"))
+           .map((option) => option.dataset.advancedSelectValueParam)
+    JS
+  end
+
+  def replace_options(select_id, options_json, options = nil)
+    select_call(select_id, "replaceOptions(#{options_json}#{", #{options}" if options})")
   end
 
   def append_built_option(select_id, option_json)

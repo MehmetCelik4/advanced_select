@@ -24,6 +24,7 @@ AdvancedSelect is a small Rails engine for rendering an advanced select input wi
 - [Option Contract](#option-contract)
 - [Events](#events)
 - [Reading And Writing The Value](#reading-and-writing-the-value)
+- [Driving The Option List](#driving-the-option-list)
 - [Disabled State](#disabled-state)
 - [API Reference](#api-reference)
 - [Local Development](#local-development)
@@ -816,6 +817,38 @@ the label — this keeps a server-assigned value from being silently dropped. Pa
 Use it when the value is being restored rather than chosen — replacing options after a Turbo Stream
 update, for example — so dependent fields do not cascade off a change the user did not make. The
 suppression lasts for a single render; the next assignment broadcasts normally.
+
+### Driving The Option List
+
+The option list can be driven from the browser as well, for host apps that load options from
+somewhere the Turbo Stream flow does not cover:
+
+```js
+select.appendOption({ id: "9", label: "Item C" })
+
+select.replaceOptions([
+  { id: "3", label: "Item A" },
+  { id: "7", label: "Item B" }
+])
+
+select.replaceOptions(options, { selected: "7" })       // replace the list and set the value
+select.replaceOptions(options, { selected: null })      // replace the list and clear the value
+select.replaceOptions(options, { silent: false })       // broadcast the resulting value
+```
+
+Both take options in the [option contract](#option-contract) shape and render them through
+`optionElement`, so they carry the host's class map.
+
+`appendOption` adds one option to the end of the list and does nothing if an option with that id is
+already there. It does not select the option — that is `addOption`, which exists for
+[Add Mode](#add-mode), where the user creates a value that was not in the list.
+
+`replaceOptions` swaps the whole list. Leaving `selected` out keeps the current selection, even when
+the new list no longer contains it — the common case after a search, where the selected record may
+have fallen outside the page of results. Passing `selected` assigns it with `setValue` semantics.
+
+Unlike `setValue`, `replaceOptions` is silent by default: replacing a list is not a value change, so
+it should not cascade to dependent fields on its own. Pass `silent: false` when it should.
 
 ### Disabled State
 
