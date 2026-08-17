@@ -207,6 +207,30 @@ application.register("advanced-select", AdvancedSelectController)
 
 This keeps local custom behavior small while allowing future gem fixes to flow through the base controller.
 
+Two methods exist as extension points for host apps whose options endpoint does not speak Turbo
+Streams. `readOptionsResponse(response)` turns the `fetch` response into a payload and defaults to
+`response.text()`; `renderOptionsResponse(payload)` puts that payload on the page and defaults to
+`Turbo.renderStreamMessage(payload)`. Overriding them keeps the request sequencing, the stale
+response guard, and the post-render bookkeeping in the base controller:
+
+```js
+export default class extends AdvancedSelectController {
+  readOptionsResponse(response) {
+    return response.headers.get("content-type")?.includes("application/json")
+      ? response.json()
+      : super.readOptionsResponse(response)
+  }
+
+  renderOptionsResponse(payload) {
+    if (Array.isArray(payload)) {
+      this.replaceOptions(payload)
+    } else {
+      super.renderOptionsResponse(payload)
+    }
+  }
+}
+```
+
 For `jsbundling-rails` and other bundlers, the installer copies the full controller because bundlers do not resolve Rails engine JavaScript assets automatically. In that setup the copied file is host-owned.
 
 ### jsbundling/Propshaft Example
@@ -757,6 +781,22 @@ Every value change dispatches two events:
 | --- | --- | --- |
 | `change` | the first hidden input | native form behaviour and [dependent fields](#dependent-fields) |
 | `advanced-select:change` | the root element | application listeners that need the whole selection |
+
+A remote field also announces when its options finish rendering:
+
+| Event | Target | Purpose |
+| --- | --- | --- |
+| `advanced-select:options-loaded` | the root element | application listeners that react to the option list itself |
+
+It fires after every successful [remote](#remote-search) load — including eager
+[dependent](#dependent-fields) loads — once the options are in the DOM and any single-option
+auto-selection has been applied. Its `detail` carries the field `name`, the resulting `value`, and
+the `count` of selectable options, which is enough to react to an empty or single-option result
+without reading the DOM:
+
+```erb
+data-action="advanced-select:options-loaded->my-controller#optionsChanged"
+```
 
 Both bubble. `advanced-select:change` carries a `detail` payload:
 
