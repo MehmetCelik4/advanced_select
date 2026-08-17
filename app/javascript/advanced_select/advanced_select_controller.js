@@ -30,6 +30,7 @@ export default class extends Controller {
     this.timer = null
     this.requestSequence = 0
     this.activeIndex = -1
+    this.suppressChange = false
     this.placeholderClass = this.element.dataset.advancedSelectPlaceholderClass || "ui-advanced-select-placeholder"
     this.valueClass = this.element.dataset.advancedSelectValueClass || "ui-advanced-select-value"
     this.tokenClass = this.element.dataset.advancedSelectTokenClass || "ui-advanced-select-token"
@@ -162,6 +163,31 @@ export default class extends Controller {
     this.selectedValue = []
     this.renderSelection()
     this.close()
+  }
+
+  getValue() {
+    return this.currentValue
+  }
+
+  setValue(value, { silent = false } = {}) {
+    const requested = (Array.isArray(value) ? value : [value])
+      .filter((item) => item !== "" && item != null)
+      .map(String)
+    const values = this.multipleValue ? requested : requested.slice(0, 1)
+    const options = this.optionElements.map((element) => this.optionData(element))
+
+    this.selectedValue = values.map((item) => {
+      const option = options.find((candidate) => candidate.id === item || candidate.value === item)
+
+      return this.normalizeSelectedOption(option || { id: item, value: item, label: item })
+    })
+
+    this.suppressChange = silent
+    this.renderSelection()
+  }
+
+  refresh() {
+    this.renderSelection()
   }
 
   keydown(event) {
@@ -402,7 +428,12 @@ export default class extends Controller {
     this.renderOptionsState()
     this.caretTarget.classList.toggle("hidden", this.selectedValue.length > 0)
     this.clearTarget.classList.toggle("hidden", this.disabledValue || this.selectedValue.length === 0)
-    this.dispatchValueChange()
+
+    if (this.suppressChange) {
+      this.suppressChange = false
+    } else {
+      this.dispatchValueChange()
+    }
   }
 
   dispatchValueChange() {
