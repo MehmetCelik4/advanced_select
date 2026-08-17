@@ -283,3 +283,15 @@
   disabled: true,
   searchable: false
 ) %>
+
+<%= advanced_select_tag(
+  "example[described_id]",
+  id: "example_described_id",
+  selected: nil,
+  options: [
+    { id: "described-1", label: "Described One", description: "First description" },
+    { id: "described-2", label: "Described Two", description: "Second description" }
+  ],
+  placeholder: "Choose described item",
+  searchable: false
+) %>

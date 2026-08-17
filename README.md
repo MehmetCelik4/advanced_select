@@ -1038,6 +1038,16 @@ Tailwind content scanning can usually see class strings when they are written li
 
 The host app can still load the gem CSS through `application.css`. `classes:` entries replace the mapped default classes for that helper call; unmapped keys keep the gem defaults. `append_classes:` entries keep the resolved class and append host classes after it.
 
+The resolved `option`, `option_check`, `option_content`, and `option_description` classes are also published on the root element as data attributes, so options the controller builds in the browser carry the same classes as the ones the server renders. `optionElement(option)` returns such an element:
+
+```js
+const select = application.getControllerForElementAndIdentifier(element, "advanced-select")
+
+select.currentOptionsTarget.appendChild(select.optionElement({ id: "7", label: "Item B" }))
+```
+
+It produces the same markup as `advanced_select_option_tag`: the option contract's `id`, `value`, `label`, `display_label`, and `description` are all honored, and the resulting element is fully interactive — hovering activates it and clicking selects it.
+
 ### CSS Overrides
 
 Importmap/Sprockets host applications can put app-specific styling in a host-owned file such as:
