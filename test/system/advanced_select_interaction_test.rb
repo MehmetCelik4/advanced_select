@@ -440,6 +440,70 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
     assert_equal "local-9", select_call("example_item_id", "getValue()")
   end
 
+  test "broadcasts advanced-select:options-loaded once remote options are rendered" do
+    visit root_path
+    record_options_loaded_events
+
+    find("#example_remote_id_trigger").click
+
+    assert_selector "#example_remote_id_options button", text: "Remote Alpha"
+
+    events = options_loaded_events.select { |event| event["name"] == "example[remote_id]" }
+
+    assert_equal 1, events.size
+    assert_equal 4, events.first["count"]
+    assert_equal "", events.first["value"]
+  end
+
+  test "broadcasts advanced-select:options-loaded for eagerly loaded dependent options" do
+    visit root_path
+
+    assert_selector "#example_eager_dependent_id_summary", text: "Dependent North"
+
+    record_options_loaded_events
+    select "South", from: "example_eager_dependency"
+
+    assert_selector "#example_eager_dependent_id_summary", text: "Dependent South"
+
+    events = options_loaded_events.select { |event| event["name"] == "example[eager_dependent_id]" }
+
+    assert_equal "dependent-south", events.last["value"]
+  end
+
+  test "reads the options response through readOptionsResponse" do
+    visit root_path
+    page.execute_script(<<~JS)
+      ((select) => {
+        const original = select.readOptionsResponse.bind(select)
+        window.__readCalls = 0
+        select.readOptionsResponse = (response) => {
+          window.__readCalls += 1
+          return original(response)
+        }
+      })(#{controller_script('example_remote_id')})
+    JS
+
+    find("#example_remote_id_trigger").click
+
+    assert_selector "#example_remote_id_options button", text: "Remote Alpha"
+    assert_equal 1, page.evaluate_script("window.__readCalls")
+  end
+
+  test "renders the options response through renderOptionsResponse" do
+    visit root_path
+    page.execute_script(<<~JS)
+      ((select) => {
+        select.renderOptionsResponse = (payload) => { window.__payload = payload }
+      })(#{controller_script('example_remote_id')})
+    JS
+
+    find("#example_remote_id_trigger").click
+
+    assert_selector "#example_remote_id_options", text: "No options found"
+    assert_no_selector "#example_remote_id_options button", text: "Remote Alpha"
+    assert_includes page.evaluate_script("window.__payload"), "Remote Alpha"
+  end
+
   test "adds an option to the end of the list through appendOption" do
     visit root_path
     select_call("example_item_id", "appendOption({ id: 'local-9', label: 'Local Nine' })")
@@ -734,6 +798,28 @@ class AdvancedSelectInteractionTest < ApplicationSystemTestCase
 
   def advanced_select_events
     page.evaluate_script("window.__advancedSelectEvents")
+  end
+
+  def controller_script(select_id)
+    <<~JS.strip
+      window.Stimulus.getControllerForElementAndIdentifier(
+        document.getElementById("#{select_id}_trigger").closest("[data-controller~='advanced-select']"),
+        "advanced-select"
+      )
+    JS
+  end
+
+  def record_options_loaded_events
+    page.execute_script(<<~JS)
+      window.__advancedSelectOptionsLoaded = []
+      document.addEventListener("advanced-select:options-loaded", (event) => {
+        window.__advancedSelectOptionsLoaded.push(event.detail)
+      })
+    JS
+  end
+
+  def options_loaded_events
+    page.evaluate_script("window.__advancedSelectOptionsLoaded")
   end
 
   def option_values(select_id)
